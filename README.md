@@ -4,7 +4,7 @@ TinyThreadsは、Altera Nios II上でPOSIX(pthreads)互換のマルチスレッ�
 Nios II Eclipse開発環境にてBSP typeの一つとして利用できます。
 
 TinyThreads is POSIX(pthreads) compatible multi-threading library for Altera Nios II.
-This library can be used as one of BSP types from Nios II Eclipese environment.
+This library can be used as one of BSP types from Nios II Eclipse environment.
 
 ## 使い方 / Usage
 
@@ -49,8 +49,8 @@ The MIT License
 
 ### スレッド操作とスケジューリング / Thread operation and scheduling
 
-| Interface | Name                            | Conforming to | Description |
-|:----------|:--------------------------------|:--------------|:------------|
+| Interface | Name                            | Conforming to | Remarks |
+|:----------|:--------------------------------|:--------------|:--------|
 | Type      | pthread\_t                      | POSIX.1-2001  | |
 | Function  | pthread\_create()               | POSIX.1-2001  | |
 | Function  | pthread\_exit()                 | POSIX.1-2001  | |
@@ -71,17 +71,17 @@ The MIT License
 | Function  | pthread\_attr\_getstack()       | POSIX.1-2001  | |
 | Function  | pthread\_attr\_setstacksize()   | POSIX.1-2001  | |
 | Function  | pthread\_attr\_getstacksize()   | POSIX.1-2001  | |
-| Function  | sched\_get\_priority\_max()     | POSIX.1-2001  | <sched.h> |
-| Function  | sched\_get\_priority\_min()     | POSIX.1-2001  | <sched.h> |
-| Function  | shced\_yield()                  | POSIX.1-2001  | <sched.h> |
+| Function  | sched\_get\_priority\_max()     | POSIX.1-2001  | &lt;sched.h&gt; |
+| Function  | sched\_get\_priority\_min()     | POSIX.1-2001  | &lt;sched.h&gt; |
+| Function  | shced\_yield()                  | POSIX.1-2001  | &lt;sched.h&gt; |
 
 ### ミューテックス / Mutex
 
 BSP設定(tinyth.feature.enable\_mutex)が有効のときに使用可能です(既定値は有効)。  
 This feature is available when BSP setting (tinyth.feature.enable\_mutex) is enabled (default: enable).
 
-| Interface | Name                        | Conforming to | Description |
-|:----------|:----------------------------|:--------------|:------------|
+| Interface | Name                        | Conforming to | Remarks |
+|:----------|:----------------------------|:--------------|:--------|
 | Type      | pthread\_mutex\_t           | POSIX.1-2001  | |
 | Macro     | PTHREAD\_MUTEX\_INITIALIZER | POSIX.1-2001  | |
 | Function  | pthread\_mutex\_destroy()   | POSIX.1-2001  | |
@@ -95,22 +95,22 @@ This feature is available when BSP setting (tinyth.feature.enable\_mutex) is ena
 BSP設定(tinyth.feature.enable\_sem)が有効のときに使用可能です(既定値は有効)。  
 This feature is available when BSP setting (tinyth.feature.enable\_sem) is enabled (default: enable).
 
-| Interface | Name           | Conforming to | Description   |
-|:----------|:---------------|:--------------|:--------------|
-| Type      | sem\_t         | POSIX.1-2001  | <semaphore.h> |
-| Function  | sem\_destroy() | POSIX.1-2001  | <semaphore.h> |
-| Function  | sem\_init()    | POSIX.1-2001  | <semaphore.h> |
-| Function  | sem\_post()    | POSIX.1-2001  | <semaphore.h> Can be used in ISR |
-| Function  | sem\_wait()    | POSIX.1-2001  | <semaphore.h> |
-| Function  | sem\_trywait() | POSIX.1-2001  | <semaphore.h> |
+| Interface | Name           | Conforming to | Remarks |
+|:----------|:---------------|:--------------|:--------|
+| Type      | sem\_t         | POSIX.1-2001  | &lt;semaphore.h&gt; |
+| Function  | sem\_destroy() | POSIX.1-2001  | &lt;semaphore.h&gt; |
+| Function  | sem\_init()    | POSIX.1-2001  | &lt;semaphore.h&gt; |
+| Function  | sem\_post()    | POSIX.1-2001  | &lt;semaphore.h&gt; Can be used in ISR |
+| Function  | sem\_wait()    | POSIX.1-2001  | &lt;semaphore.h&gt; |
+| Function  | sem\_trywait() | POSIX.1-2001  | &lt;semaphore.h&gt; |
 
 ### 条件付き変数 / Conditional variables
 
 BSP設定(tinyth.feature.enable\_condおよびtinyth.feature.enable\_mutex)の両方が有効のときに使用可能です(既定値は有効)。  
 This feature is available when both of BSP setting (tinyth.feature.enable\_cond and tinyth.feature.enable\.mutex) are enabled (default: enable).
 
-| Interface | Name                       | Conforming to | Description |
-|:----------|:---------------------------|:--------------|:------------|
+| Interface | Name                       | Conforming to | Remarks |
+|:----------|:---------------------------|:--------------|:--------|
 | Type      | pthread\_cond\_t           | POSIX.1-2001  | |
 | Macro     | PTHREAD\_COND\_INITIALIZER | POSIX.1-2001  | |
 | Function  | pthread\_cond\_destroy()   | POSIX.1-2001  | |
@@ -124,7 +124,7 @@ This feature is available when both of BSP setting (tinyth.feature.enable\_cond 
 BSP設定(tinyth.feature.enable\_once)が有効のときに使用可能です(既定値は有効)。  
 This feature is available when BSP setting (tinyth.feature.enable\_once) is enabled (default: enable).
 
-| Interface | Name                | Conforming to | Description |
+| Interface | Name                | Conforming to | Remarks     |
 |:----------|:--------------------|:--------------|:------------|
 | Type      | pthread\_once\_t    | POSIX.1-2001  | |
 | Macro     | PTHREAD\_ONCE\_INIT | POSIX.1-2001  | |
