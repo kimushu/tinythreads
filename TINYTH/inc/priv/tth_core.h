@@ -1,14 +1,14 @@
 #ifndef __PRIV_TTH_CORE_H__
 #define __PRIV_TTH_CORE_H__
 
-#include <stddef.h>
-#include <tthread.h>
-
 #if defined(__NIOS2__)
 #include <priv/tth_arch_nios2.h>
 #else
 #error "Unsupported architecture"
 #endif
+
+#include <stddef.h>
+#include <tthread.h>
 
 #ifdef __cplusplus
 extern "C" {

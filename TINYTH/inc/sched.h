@@ -18,13 +18,27 @@ enum
 #ifndef SCHED_PRIORITY_MIN
 #define SCHED_PRIORITY_MIN      1
 #endif
+#if !(SCHED_PRIORITY_MIN >= 1)
+#error "SCHED_PRIORITY_MIN must be >= 1"
+#endif
 
 #ifndef SCHED_PRIORITY_MAX
 #define SCHED_PRIORITY_MAX      99
 #endif
+#if !(SCHED_PRIORITY_MAX <= 255)
+#error "SCHED_PRIORITY_MIN must be <= 255"
+#endif
+
+#if !(SCHED_PRIORITY_MIN <= SCHED_PRIORITY_MAX)
+#error "SCHED_PRIORITY_MIN must be <= SCHED_PRIORITY_MAX"
+#endif
 
 #ifndef SCHED_PRIORITY_DEFAULT
 #define SCHED_PRIORITY_DEFAULT  10
+#endif
+#if !(SCHED_PRIORITY_MIN <= SCHED_PRIORITY_DEFAULT) || \
+    !(SCHED_PRIORITY_DEFAULT <= SCHED_PRIORITY_MAX)
+#error "SCHED_PRIORITY_DEFAULT is out of valid priority range"
 #endif
 
 extern int sched_get_priority_max(int policy);

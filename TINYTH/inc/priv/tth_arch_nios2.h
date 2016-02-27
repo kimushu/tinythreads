@@ -2,6 +2,7 @@
 #define __PRIV_TTH_ARCH_NIOS2_H__
 
 #include <stdint.h>
+#include <system.h>
 
 #ifdef __cplusplus
 extern "C" {

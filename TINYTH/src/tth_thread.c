@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <reent.h>
 #include <malloc.h>
+#include <string.h>
 
 /*
  * Idle thread (always ready)

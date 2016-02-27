@@ -1,6 +1,7 @@
 #include <priv/tth_core.h>
 #include <stddef.h>
 #include <errno.h>
+#if (TTHREAD_ENABLE_SEM != 0)
 
 /*
  * [POSIX.1-2001]
@@ -123,4 +124,5 @@ int sem_trywait(sem_t *sem)
   return result;
 }
 
+#endif  /* TTHREAD_ENABLE_SEM */
 /* vim: set et sts=2 sw=2: */

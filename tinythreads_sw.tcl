@@ -59,6 +59,24 @@ add_sw_property include_directory TINYTH/inc
 # Makefile additions
 add_sw_property alt_cppflags_addition "-D__tinythreads__"
 
+#
 # TinyThreads settings
+#
 
+# Feature enable/disable
+add_sw_setting boolean system_h_define feature.enable_cond TTHREAD_ENABLE_COND 1 "Enable pthread_cond*() APIs"
+add_sw_setting boolean system_h_define feature.enable_mutex TTHREAD_ENABLE_MUTEX 1 "Enable pthread_mutex*() APIs"
+add_sw_setting boolean system_h_define feature.enable_sem TTHREAD_ENABLE_SEM 1 "Enable sem_*() APIs"
+add_sw_setting boolean system_h_define feature.enable_once TTHREAD_ENABLE_ONCE 1 "Enable pthread_once*() APIs"
+add_sw_setting boolean system_h_define feature.enable_rwlock TTHREAD_ENABLE_RWLOCK 1 "Enable pthread_rwlock*() APIs"
+add_sw_setting boolean system_h_define feature.enable_spin TTHREAD_ENABLE_SPIN 1 "Enable pthread_spin*() APIs"
+
+# Scheduling settings
+add_sw_setting decimal_number system_h_define scheduling.preemption.interval TTHREAD_PREEMPTION_INTERVAL 10 "Interval of preemption (in tick counts)"
+add_sw_setting decimal_number system_h_define scheduling.priority.max SCHED_PRIORITY_MAX 99 "Maximum priority value (1~255)"
+add_sw_setting decimal_number system_h_define scheduling.priority.min SCHED_PRIORITY_MIN 1 "Minimum priority value (1~255)"
+add_sw_setting decimal_number system_h_define scheduling.priority.default SCHED_PRIORITY_DEFAULT 10 "Default priority value"
+
+# pthread settings
+add_sw_setting hex_number system_h_define pthreads.min_stack_size PTHREAD_STACK_MIN 0x1000 "Minimum stack size for threads"
 

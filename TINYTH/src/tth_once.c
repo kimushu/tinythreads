@@ -1,4 +1,5 @@
-#include <pthread.h>
+#include <priv/tth_core.h>
+#if (TTHREAD_ENABLE_ONCE != 0)
 
 /*
  * [POSIX.1-2001]
@@ -29,4 +30,5 @@ int pthread_once(pthread_once_t *once_control, void (*init_routine)(void))
   return pthread_mutex_unlock(&once_control->__priv.mutex);
 }
 
+#endif  /* TTHREAD_ENABLE_ONCE */
 /* vim: set et sts=2 sw=2: */

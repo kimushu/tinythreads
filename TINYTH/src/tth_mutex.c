@@ -1,5 +1,6 @@
 #include <priv/tth_core.h>
 #include <priv/tth_mutex.h>
+#if (TTHREAD_ENABLE_MUTEX != 0)
 
 /*
  * [POSIX.1-2001]
@@ -69,4 +70,5 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex)
   return result;
 }
 
+#endif  /* TTHREAD_ENABLE_MUTEX */
 /* vim: set et sts=2 sw=2: */
