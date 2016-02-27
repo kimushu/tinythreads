@@ -29,7 +29,7 @@ static inline int tth_cs_mutex_lock(pthread_mutex_t *mutex, int wait)
       return EBUSY;
     }
 
-    tth_cs_move(&tth_ready, (tth_thread **)&mutex->__priv.waiter);
+    tth_cs_move(&tth_ready, (tth_thread **)&mutex->__priv.waiter, TTHREAD_WAIT_MUTEX);
     tth_cs_switch();
   }
 
@@ -48,7 +48,8 @@ static inline int tth_cs_mutex_unlock(pthread_mutex_t *mutex)
   }
 
   mutex->__priv.owner = NULL;
-  tth_cs_move((tth_thread **)&mutex->__priv.waiter, &tth_ready);
+  tth_cs_move((tth_thread **)&mutex->__priv.waiter, &tth_ready, TTHREAD_WAIT_READY);
+
   return 0;
 }
 

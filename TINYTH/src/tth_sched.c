@@ -43,7 +43,7 @@ int sched_yield(void)
 {
   int lock;
   lock = tth_cs_begin();
-  tth_cs_move(&tth_ready, &tth_ready);
+  tth_cs_move(&tth_ready, &tth_ready, TTHREAD_WAIT_READY);
   tth_cs_switch();
   tth_cs_end(lock);
   return 0;

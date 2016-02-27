@@ -67,6 +67,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
   object = ((tth_thread *)reent) - 1;
   thread->__priv.thread = object;
 
+  object->waitstate = TTHREAD_WAIT_INVAL;
   object->waiter = NULL;
   object->follower = NULL;
   object->detachstate = attr->__priv.detachstate;
@@ -78,7 +79,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
   tth_init_stack(object, reent, start_routine, arg);
 
   lock = tth_cs_begin();
-  tth_cs_move(&object, &tth_ready);
+  tth_cs_move(&object, &tth_ready, TTHREAD_WAIT_READY);
   tth_cs_switch();
   tth_cs_end(lock);
 
@@ -99,12 +100,12 @@ void pthread_exit(void *retval)
 
   if (target->detachstate == PTHREAD_CREATE_JOINABLE)
   {
-    tth_cs_move(&tth_ready, NULL);
-    tth_cs_move((tth_thread **)&target->waiter, &tth_ready);
+    tth_cs_move(&tth_ready, NULL, TTHREAD_WAIT_JOIN);
+    tth_cs_move((tth_thread **)&target->waiter, &tth_ready, TTHREAD_WAIT_READY);
   }
   else
   {
-    tth_cs_move(&tth_ready, &tth_detach);
+    tth_cs_move(&tth_ready, &tth_detach, TTHREAD_WAIT_DEAD);
   }
 
   tth_cs_switch();
@@ -133,7 +134,7 @@ int pthread_join(pthread_t thread, void **retval)
   }
   else
   {
-    tth_cs_move(&tth_ready, (tth_thread **)&target->waiter);
+    tth_cs_move(&tth_ready, (tth_thread **)&target->waiter, TTHREAD_WAIT_THREAD);
     tth_cs_switch();
 
     /* Target thread has been finished */

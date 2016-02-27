@@ -1,4 +1,5 @@
 #ifdef __NIOS2__
+#include <system.h>
 
 /*
  * Switch thread context
@@ -22,6 +23,10 @@ tth_int_context_switch:
     stw     r23, 28(sp)
     stw     fp,  32(sp)
     stw     ra,  36(sp)
+#if (TTHREAD_ENABLE_PROF != 0)
+    /* load switch count */
+    ldw     r3,  4(r5)
+#endif
     /* store _impure_ptr */
     stw     r6,  40(sp)
     /* store stack pointer */
@@ -30,6 +35,10 @@ tth_int_context_switch:
     ldw     sp,  0(r5)
     stw     r5,  %gprel(tth_running)(gp)
     ldw     r6,  40(sp)
+#if (TTHREAD_ENABLE_PROF != 0)
+    /* increment switch count */
+    addi    r3,  r3, 1
+#endif
     /* load callee-saved registers */
     ldw     ra,  36(sp)
     ldw     fp,  32(sp)
@@ -44,6 +53,10 @@ tth_int_context_switch:
     addi    sp,  sp, 44
     /* load _impure_ptr */
     stw     r6,  %gprel(_impure_ptr)(gp)
+#if (TTHREAD_ENABLE_PROF != 0)
+    /* store switch count */
+    stw     r3,  4(r5)
+#endif
     ret
     .endfunc
 

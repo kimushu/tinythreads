@@ -14,15 +14,28 @@
 extern "C" {
 #endif
 
+enum
+{
+  TTHREAD_WAIT_INVAL = 0, /* 0: profiling off       */
+  TTHREAD_WAIT_READY,     /* 1: ready / running     */
+  TTHREAD_WAIT_JOIN,      /* 2: joinable            */
+  TTHREAD_WAIT_DEAD,      /* 3: dead                */
+  TTHREAD_WAIT_THREAD,    /* 4: pthread_join        */
+  TTHREAD_WAIT_MUTEX,     /* 5: pthread_mutex_lock  */
+  TTHREAD_WAIT_SEM,       /* 6: sem_wait            */
+  TTHREAD_WAIT_COND,      /* 7: pthread_cond_wait   */
+};
+
 typedef struct
 {
-  void *context;  /* Must be 1st item in tth_thread */
+  void *context;          /* Must be 1st item in tth_thread */
+  unsigned int switches;  /* Must be 2nd item in tth_thread */
   void *waiter;
   void *follower;
   unsigned char detachstate;
   unsigned char schedpriority;
   unsigned char schedpolicy;
-  unsigned char __padding;
+  unsigned char waitstate;
   void *autostack;
   void *retval;
 }
@@ -40,18 +53,24 @@ extern void tth_cs_end(int lock);
 extern void tth_cs_exec_switch(void);
 
 /* Prototype for inline functions */
-static inline void tth_cs_move(tth_thread **from, tth_thread **to) __attribute__((always_inline));
+static inline void tth_cs_move(tth_thread **from, tth_thread **to, int waitstate) __attribute__((always_inline));
 static inline void tth_cs_switch(void) __attribute__((always_inline));
 
 /* Move thread to another linked list */
-static inline void tth_cs_move(tth_thread **from, tth_thread **to)
+static inline void tth_cs_move(tth_thread **from, tth_thread **to, int waitstate)
 {
   tth_thread *target = *from;
   tth_thread *next;
   int priority;
+#if (TTHREAD_ENABLE_PROF == 0)
+  (void)waitstate;
+#endif
 
   if (target)
   {
+#if (TTHREAD_ENABLE_PROF != 0)
+    target->waitstate = waitstate;
+#endif
     *from = target->follower;
 
     if (to)
