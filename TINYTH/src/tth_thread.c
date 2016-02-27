@@ -33,10 +33,13 @@ int tth_interrupt_level;
 tth_thread *tth_running = &tth_default_thread;
 tth_thread *tth_ready = &tth_default_thread;
 
-/* POSIX.1-2001 */
+/*
+ * [POSIX.1-2001]
+ * Create a new thread
+ */
 int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *), void *arg)
 {
-  struct _reent *impure;
+  struct _reent *reent;
   tth_thread *object;
   void *stackaddr;
   int lock;
@@ -57,10 +60,10 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
     }
   }
 
-  impure = ((struct _reent *)((uintptr_t)stackaddr + attr->__priv.stacksize)) - 1;
-  _REENT_INIT_PTR(impure);
+  reent = ((struct _reent *)((uintptr_t)stackaddr + attr->__priv.stacksize)) - 1;
+  _REENT_INIT_PTR(reent);
 
-  object = ((tth_thread *)impure) - 1;
+  object = ((tth_thread *)reent) - 1;
   thread->__priv.thread = object;
 
   object->waiter = NULL;
@@ -71,7 +74,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
   object->autostack = attr->__priv.stackaddr ? NULL : stackaddr;
   object->retval = NULL;
 
-  tth_init_stack(object, impure, start_routine, arg);
+  tth_init_stack(object, reent, start_routine, arg);
 
   lock = tth_cs_begin();
   tth_cs_move(&object, &tth_ready);
@@ -81,7 +84,10 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
   return 0;
 }
 
-/* POSIX.1-2001 */
+/*
+ * [POSIX.1-2001]
+ * Terminate the calling thread
+ */
 void pthread_exit(void *retval)
 {
   tth_thread *target = tth_running;
@@ -104,7 +110,10 @@ void pthread_exit(void *retval)
   // never return
 }
 
-/* POSIX.1-2001 */
+/*
+ * [POSIX.1-2001]
+ * Join with a terminated thread
+ */
 int pthread_join(pthread_t thread, void **retval)
 {
   tth_thread *target = (tth_thread *)thread.__priv.thread;
@@ -137,7 +146,10 @@ int pthread_join(pthread_t thread, void **retval)
   return result;
 }
 
-/* POSIX.1-2001 */
+/*
+ * [POSIX.1-2001]
+ * Detach a thread
+ */
 int pthread_detach(pthread_t thread)
 {
   tth_thread *target = (tth_thread *)thread.__priv.thread;
@@ -163,7 +175,10 @@ int pthread_detach(pthread_t thread)
   return result;
 }
 
-/* POSIX.1-2001 */
+/*
+ * [POSIX.1-2001]
+ * Get ID of the calling thread
+ */
 pthread_t pthread_self(void)
 {
   pthread_t t;
@@ -171,61 +186,18 @@ pthread_t pthread_self(void)
   return t;
 }
 
-/* POSIX.1-2001 */
+/*
+ * [POSIX.1-2001]
+ * Compare thread IDs
+ */
 int pthread_equal(pthread_t t1, pthread_t t2)
 {
   return t1.__priv.thread == t2.__priv.thread;
 }
 
-/* POSIX.1-2001 */
-int sched_get_priority_max(int policy)
-{
-  switch (policy)
-  {
-  case SCHED_FIFO:
-  case SCHED_RR:
-    return SCHED_PRIORITY_MAX;
-  }
-
-  errno = EINVAL;
-  return -1;
-}
-
-/* POSIX.1-2001 */
-int sched_get_priority_min(int policy)
-{
-  switch (policy)
-  {
-  case SCHED_FIFO:
-  case SCHED_RR:
-    return SCHED_PRIORITY_MIN;
-  }
-
-  errno = EINVAL;
-  return -1;
-}
-
-/* POSIX.1-2001 */
-int sched_yield(void)
-{
-  int lock;
-  lock = tth_cs_begin();
-  tth_cs_move(&tth_ready, &tth_ready);
-  tth_cs_switch();
-  tth_cs_end(lock);
-  return 0;
-}
-
-/* Non-POSIX */
-int sched_roundrobin_np(void)
-{
-  if (tth_running->schedpolicy == SCHED_RR) {
-    return sched_yield();
-  }
-  return 0;
-}
-
-/* Idle thread */
+/*
+ * Idle thread
+ */
 static void *tth_idle(void *arg)
 {
   int lock;
@@ -252,11 +224,17 @@ static void *tth_idle(void *arg)
   return NULL;
 }
 
+/*
+ * Initialize TinyThreads environment
+ */
 void tth_initialize(void)
 {
   tth_init_stack(&tth_idle_thread, NULL, tth_idle, NULL);
 }
 
+/*
+ * Interrupt enter hook routine
+ */
 void tth_int_enter(void)
 {
   ++tth_interrupt_level;
@@ -267,6 +245,9 @@ void tth_int_enter(void)
   }
 }
 
+/*
+ * Interrupt exit hook routine
+ */
 void tth_int_exit(void)
 {
   if (tth_interrupt_level == 0)
@@ -281,6 +262,24 @@ void tth_int_exit(void)
       tth_int_context_switch();
     }
   }
+}
+
+/*
+ * Operating system tick hook routine
+ */
+void tth_int_tick(void)
+{
+#if (TTHREAD_PREEMPTION_INTERVAL > 0)
+  static int preemption_count;
+  if (++preemption_count >= TTHREAD_PREEMPTION_INTERVAL)
+  {
+    preemption_count = 0;
+
+    if (tth_running->schedpolicy == SCHED_RR) {
+      sched_yield();
+    }
+  }
+#endif
 }
 
 /* vim: set et sts=2 sw=2: */

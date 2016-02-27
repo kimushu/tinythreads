@@ -2,6 +2,10 @@
 #include <stddef.h>
 #include <errno.h>
 
+/*
+ * [POSIX.1-2001]
+ * Destroy an unnamed semaphore
+ */
 int sem_destroy(sem_t *sem)
 {
   if (sem->__priv.waiter)
@@ -12,6 +16,10 @@ int sem_destroy(sem_t *sem)
   return 0;
 }
 
+/*
+ * [POSIX.1-2001]
+ * Initialize an unnamed semaphore
+ */
 int sem_init(sem_t *sem, int pshared, unsigned int value)
 {
   if (value > SEM_VALUE_MAX)
@@ -31,16 +39,23 @@ int sem_init(sem_t *sem, int pshared, unsigned int value)
   return 0;
 }
 
+/*
+ * [POSIX.1-2001]
+ * Get the value of a semaphore
+ */
 int sem_getvalue(sem_t *sem, int *sval)
 {
   *sval = sem->__priv.value;
   return 0;
 }
 
+/*
+ * [POSIX.1-2001]
+ * Unlock a semaphore
+ * (Async-signal-safe funcion)
+ */
 int sem_post(sem_t *sem)
 {
-  /******** async-signal-safe ********/
-
   int lock = tth_cs_begin();
   int result = 0;
 
@@ -63,6 +78,10 @@ int sem_post(sem_t *sem)
   return result;
 }
 
+/*
+ * [POSIX.1-2001]
+ * Lock a semaphore
+ */
 int sem_wait(sem_t *sem)
 {
   int lock = tth_cs_begin();
@@ -81,6 +100,10 @@ int sem_wait(sem_t *sem)
   return 0;
 }
 
+/*
+ * [POSIX.1-2001]
+ * Try to lock a semaphore
+ */
 int sem_trywait(sem_t *sem)
 {
   int lock = tth_cs_begin();

@@ -13,17 +13,29 @@ const pthread_attr_t tth_default_attr =
   }
 };
 
+/*
+ * [POSIX.1-2001]
+ * Initialize thread attributes object
+ */
 int pthread_attr_init(pthread_attr_t *attr)
 {
   *attr = tth_default_attr;
   return 0;
 }
 
+/*
+ * [POSIX.1-2001]
+ * Destroy thread attributes object
+ */
 int pthread_attr_destroy(pthread_attr_t *attr)
 {
   return 0;
 }
 
+/*
+ * [POSIX.1-2001]
+ * Set detach state attribute in thread attributes object
+ */
 int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate)
 {
   switch (detachstate)
@@ -37,12 +49,20 @@ int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate)
   return EINVAL;
 }
 
+/*
+ * [POSIX.1-2001]
+ * Get detach state attribute in thread attributes object
+ */
 int pthread_attr_getdetachstate(pthread_attr_t *attr, int *detachstate)
 {
   *detachstate = attr->__priv.detachstate;
   return 0;
 }
 
+/*
+ * [POSIX.1-2001]
+ * Set scheduling parameter attribute in thread attributes object
+ */
 int pthread_attr_setschedparam(pthread_attr_t *attr, const struct sched_param *param)
 {
   if ((SCHED_PRIORITY_MIN <= param->sched_priority) &&
@@ -55,12 +75,20 @@ int pthread_attr_setschedparam(pthread_attr_t *attr, const struct sched_param *p
   return EINVAL;
 }
 
+/*
+ * [POSIX.1-2001]
+ * Get scheduling parameter attribute in thread attributes object
+ */
 int pthread_attr_getschedparam(pthread_attr_t *attr, struct sched_param *param)
 {
   *param = attr->__priv.schedparam;
   return 0;
 }
 
+/*
+ * [POSIX.1-2001]
+ * Set scheduling policy attribute in thread attributes object
+ */
 int pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy)
 {
   switch (policy)
@@ -75,12 +103,20 @@ int pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy)
 
 }
 
+/*
+ * [POSIX.1-2001]
+ * Get scheduling policy attribute in thread attributes object
+ */
 int pthread_attr_getschedpolicy(pthread_attr_t *attr, int *policy)
 {
   *policy = attr->__priv.schedpolicy;
   return 0;
 }
 
+/*
+ * [POSIX.1-2001]
+ * Set stack attributes in thread attributes object
+ */
 int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksize)
 {
   if (stacksize < PTHREAD_STACK_MIN)
@@ -99,6 +135,10 @@ int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksiz
   return 0;
 }
 
+/*
+ * [POSIX.1-2001]
+ * Get stack attributes in thread attributes object
+ */
 int pthread_attr_getstack(pthread_attr_t *attr, void **stackaddr, size_t *stacksize)
 {
   *stackaddr = attr->__priv.stackaddr;
@@ -106,6 +146,10 @@ int pthread_attr_getstack(pthread_attr_t *attr, void **stackaddr, size_t *stacks
   return 0;
 }
 
+/*
+ * [POSIX.1-2001]
+ * Set stack size attributes in thread attributes object
+ */
 int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize)
 {
   if (stacksize < PTHREAD_STACK_MIN)
@@ -119,6 +163,10 @@ int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize)
   return 0;
 }
 
+/*
+ * [POSIX.1-2001]
+ * Get stack size attributes in thread attributes object
+ */
 int pthread_attr_getstacksize(pthread_attr_t *attr, size_t *stacksize)
 {
   *stacksize = attr->__priv.stacksize;

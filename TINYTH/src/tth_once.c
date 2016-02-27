@@ -1,5 +1,9 @@
 #include <pthread.h>
 
+/*
+ * [POSIX.1-2001]
+ * Ensure only once initialization call
+ */
 int pthread_once(pthread_once_t *once_control, void (*init_routine)(void))
 {
   int result;
