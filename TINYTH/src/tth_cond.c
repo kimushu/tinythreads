@@ -2,6 +2,10 @@
 #include <priv/tth_mutex.h>
 #if (TTHREAD_ENABLE_COND != 0)
 
+#if (TTHREAD_ENABLE_MUTEX == 0)
+#error "TTHREAD_ENABLE_COND must be enabled with TTHREAD_ENABLE_MUTEX"
+#endif
+
 /*
  * [POSIX.1-2001]
  * Destroy a condition variables

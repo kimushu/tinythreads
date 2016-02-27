@@ -1,6 +1,10 @@
 #include <priv/tth_core.h>
 #if (TTHREAD_ENABLE_ONCE != 0)
 
+#if (TTHREAD_ENABLE_MUTEX == 0)
+#error "TTHREAD_ENABLE_ONCE must be enabled with TTHREAD_ENABLE_MUTEX"
+#endif
+
 /*
  * [POSIX.1-2001]
  * Ensure only once initialization call

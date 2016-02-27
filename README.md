@@ -124,8 +124,8 @@ This feature is available when both of BSP setting (tinyth.feature.enable\_cond 
 
 ### 1回きりの初期化 / Once control
 
-BSP設定(tinyth.feature.enable\_once)が有効のときに使用可能です(既定値は有効)。  
-This feature is available when BSP setting (tinyth.feature.enable\_once) is enabled (default: enable).
+BSP設定(tinyth.feature.enable\_onceおよびtinyth.feature.enable\_mutex)の両方が有効のときに使用可能です(既定値は有効)。  
+This feature is available when both of BSP setting (tinyth.feature.enable\_once and tinyth.feature.enable\.mutex) are enabled (default: enable).
 
 | Interface | Name                | Conforming to | Remarks     |
 |:----------|:--------------------|:--------------|:------------|
