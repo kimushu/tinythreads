@@ -47,6 +47,9 @@ The MIT License
 
 ## 対応している機能 / Supported features
 
+ほとんどの機能は &lt;pthread.h&gt; ヘッダファイルで提供されます。  
+Most features are provided in &lt;pthread.h&gt; header file.
+
 ### スレッド操作とスケジューリング / Thread operation and scheduling
 
 | Interface | Name                            | Conforming to | Remarks |
