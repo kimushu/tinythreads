@@ -28,7 +28,7 @@ typedef struct
 }
 tth_thread;
 
-extern int tth_interrupt_level;
+extern int tth_int_level;
 extern tth_thread *tth_running;
 extern tth_thread *tth_ready;
 
@@ -70,7 +70,7 @@ static inline void tth_cs_move(tth_thread **from, tth_thread **to)
 /* Execute context switch */
 static inline void tth_cs_switch(void)
 {
-  if ((tth_interrupt_level == 0) && (tth_running != tth_ready))
+  if ((tth_int_level == 0) && (tth_running != tth_ready))
   {
     tth_cs_exec_switch();
   }

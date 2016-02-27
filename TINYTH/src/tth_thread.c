@@ -29,7 +29,7 @@ static tth_thread tth_default_thread =
 
 static tth_thread *tth_detach;
 
-int tth_interrupt_level;
+int tth_int_level;
 tth_thread *tth_running = &tth_default_thread;
 tth_thread *tth_ready = &tth_default_thread;
 
@@ -237,9 +237,9 @@ void tth_initialize(void)
  */
 void tth_int_enter(void)
 {
-  ++tth_interrupt_level;
+  ++tth_int_level;
 
-  if (tth_interrupt_level <= 0)
+  if (tth_int_level <= 0)
   {
     tth_crash();
   }
@@ -250,12 +250,12 @@ void tth_int_enter(void)
  */
 void tth_int_exit(void)
 {
-  if (tth_interrupt_level == 0)
+  if (tth_int_level == 0)
   {
     tth_crash();
   }
 
-  if (--tth_interrupt_level == 0)
+  if (--tth_int_level == 0)
   {
     if (tth_running != tth_ready)
     {
@@ -270,16 +270,18 @@ void tth_int_exit(void)
 void tth_int_tick(void)
 {
 #if (TTHREAD_PREEMPTION_INTERVAL > 0)
+#if (TTHREAD_PREEMPTION_INTERVAL > 1)
   static int preemption_count;
-  if (++preemption_count >= TTHREAD_PREEMPTION_INTERVAL)
+  if (++preemption_count < TTHREAD_PREEMPTION_INTERVAL)
   {
-    preemption_count = 0;
-
-    if (tth_running->schedpolicy == SCHED_RR) {
-      sched_yield();
-    }
+    return;
   }
-#endif
+  preemption_count = 0;
+#endif  /* TTHREAD_PREEMPTION_INTERVAL > 1 */
+  if (tth_running->schedpolicy == SCHED_RR) {
+    sched_yield();
+  }
+#endif  /* TTHREAD_PREEMPTION_INTERVAL > 0 */
 }
 
 /* vim: set et sts=2 sw=2: */
