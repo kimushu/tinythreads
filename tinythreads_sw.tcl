@@ -72,10 +72,12 @@ add_sw_setting boolean system_h_define feature.enable_rwlock TTHREAD_ENABLE_RWLO
 add_sw_setting boolean system_h_define feature.enable_spin TTHREAD_ENABLE_SPIN 1 "Enable pthread_spin*() APIs"
 
 # Scheduling settings
-add_sw_setting decimal_number system_h_define scheduling.preemption.interval TTHREAD_PREEMPTION_INTERVAL 10 "Interval of preemption (in tick counts)"
+add_sw_setting boolean system_h_define scheduling.preemption.enabled TTHREAD_PREEMPTION_ENABLE 1 "Enable preemption based on system tick"
+add_sw_setting decimal_number system_h_define scheduling.preemption.interval TTHREAD_PREEMPTION_INTERVAL 10 "Interval of preemption (in tick counts) / Zero means preemption disable"
 add_sw_setting decimal_number system_h_define scheduling.priority.max SCHED_PRIORITY_MAX 99 "Maximum priority value (1~255)"
 add_sw_setting decimal_number system_h_define scheduling.priority.min SCHED_PRIORITY_MIN 1 "Minimum priority value (1~255)"
 add_sw_setting decimal_number system_h_define scheduling.priority.default SCHED_PRIORITY_DEFAULT 10 "Default priority value"
+add_sw_setting boolean system_h_define scheduling.policy.default_fifo SCHED_POLICY_DEFAULT_FF 0 "Use FIFO policy (SCHED_FF) by default. If disabled, round-robin policy (SCHED_RR) is used by default."
 
 # pthread settings
 add_sw_setting hex_number system_h_define pthreads.min_stack_size PTHREAD_STACK_MIN 0x1000 "Minimum stack size for threads"

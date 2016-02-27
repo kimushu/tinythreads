@@ -270,6 +270,7 @@ void tth_int_exit(void)
  */
 void tth_int_tick(void)
 {
+#if (TTHREAD_PREEMPTION_ENABLE != 0)
 #if (TTHREAD_PREEMPTION_INTERVAL > 0)
 #if (TTHREAD_PREEMPTION_INTERVAL > 1)
   static int preemption_count;
@@ -283,6 +284,7 @@ void tth_int_tick(void)
     sched_yield();
   }
 #endif  /* TTHREAD_PREEMPTION_INTERVAL > 0 */
+#endif  /* TTHREAD_PREEMPTION_ENABLE */
 }
 
 /* vim: set et sts=2 sw=2: */

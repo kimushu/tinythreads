@@ -11,7 +11,9 @@ enum
   SCHED_RR,
 };
 
-#ifndef SCHED_POLICY_DEFAULT
+#if (SCHED_POLICY_DEFAULT_FF != 0)
+#define SCHED_POLICY_DEFAULT    SCHED_FF
+#else
 #define SCHED_POLICY_DEFAULT    SCHED_RR
 #endif
 
