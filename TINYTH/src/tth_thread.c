@@ -67,12 +67,14 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
   object = ((tth_thread *)reent) - 1;
   thread->__priv.thread = object;
 
-  object->waitstate = TTHREAD_WAIT_INVAL;
+  // object->context will be initialized in tth_init_stack()
+  object->switches = 0;
   object->waiter = NULL;
   object->follower = NULL;
   object->detachstate = attr->__priv.detachstate;
   object->schedpriority = attr->__priv.schedparam.sched_priority;
   object->schedpolicy = attr->__priv.schedpolicy;
+  object->waitstate = TTHREAD_WAIT_INVAL;
   object->autostack = attr->__priv.stackaddr ? NULL : stackaddr;
   object->retval = NULL;
 
@@ -97,11 +99,12 @@ void pthread_exit(void *retval)
   tth_cs_begin();
 
   target->retval = retval;
+  target->context = NULL;
 
   if (target->detachstate == PTHREAD_CREATE_JOINABLE)
   {
     tth_cs_move(&tth_ready, NULL, TTHREAD_WAIT_JOIN);
-    tth_cs_move((tth_thread **)&target->waiter, &tth_ready, TTHREAD_WAIT_READY);
+    tth_cs_move(&target->waiter, &tth_ready, TTHREAD_WAIT_READY);
   }
   else
   {
@@ -118,7 +121,7 @@ void pthread_exit(void *retval)
  */
 int pthread_join(pthread_t thread, void **retval)
 {
-  tth_thread *target = (tth_thread *)thread.__priv.thread;
+  tth_thread *target = thread.__priv.thread;
   int result = 0;
   int lock;
 
@@ -134,14 +137,19 @@ int pthread_join(pthread_t thread, void **retval)
   }
   else
   {
-    tth_cs_move(&tth_ready, (tth_thread **)&target->waiter, TTHREAD_WAIT_THREAD);
-    tth_cs_switch();
+    if (target->waitstate != TTHREAD_WAIT_JOIN)
+    {
+      tth_cs_move(&tth_ready, &target->waiter, TTHREAD_WAIT_THREAD);
+      tth_cs_switch();
+    }
 
     /* Target thread has been finished */
     if (retval)
     {
       *retval = target->retval;
     }
+
+    tth_cs_move(&target, &tth_detach, TTHREAD_WAIT_DEAD);
   }
 
   tth_cs_end(lock);
@@ -154,7 +162,7 @@ int pthread_join(pthread_t thread, void **retval)
  */
 int pthread_detach(pthread_t thread)
 {
-  tth_thread *target = (tth_thread *)thread.__priv.thread;
+  tth_thread *target = thread.__priv.thread;
   int result = 0;
   int lock;
 
@@ -184,7 +192,7 @@ int pthread_detach(pthread_t thread)
 pthread_t pthread_self(void)
 {
   pthread_t t;
-  t.__priv.thread = (void *)tth_running;
+  t.__priv.thread = tth_running;
   return t;
 }
 

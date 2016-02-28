@@ -16,22 +16,22 @@ extern "C" {
 
 enum
 {
-  TTHREAD_WAIT_INVAL = 0, /* 0: profiling off       */
-  TTHREAD_WAIT_READY,     /* 1: ready / running     */
-  TTHREAD_WAIT_JOIN,      /* 2: joinable            */
-  TTHREAD_WAIT_DEAD,      /* 3: dead                */
-  TTHREAD_WAIT_THREAD,    /* 4: pthread_join        */
-  TTHREAD_WAIT_MUTEX,     /* 5: pthread_mutex_lock  */
-  TTHREAD_WAIT_SEM,       /* 6: sem_wait            */
-  TTHREAD_WAIT_COND,      /* 7: pthread_cond_wait   */
+  TTHREAD_WAIT_INVAL  = '-',  /* profiling off      */
+  TTHREAD_WAIT_READY  = 'R',  /* ready / running    */
+  TTHREAD_WAIT_JOIN   = 'J',  /* joinable           */
+  TTHREAD_WAIT_DEAD   = 'D',  /* dead               */
+  TTHREAD_WAIT_THREAD = 'T',  /* pthread_join       */
+  TTHREAD_WAIT_MUTEX  = 'M',  /* pthread_mutex_lock */
+  TTHREAD_WAIT_SEM    = 'S',  /* sem_wait           */
+  TTHREAD_WAIT_COND   = 'C',  /* pthread_cond_wait  */
 };
 
-typedef struct
+typedef struct tth_thread
 {
   void *context;          /* Must be 1st item in tth_thread */
   unsigned int switches;  /* Must be 2nd item in tth_thread */
-  void *waiter;
-  void *follower;
+  struct tth_thread *waiter;
+  struct tth_thread *follower;
   unsigned char detachstate;
   unsigned char schedpriority;
   unsigned char schedpolicy;
@@ -62,15 +62,10 @@ static inline void tth_cs_move(tth_thread **from, tth_thread **to, int waitstate
   tth_thread *target = *from;
   tth_thread *next;
   int priority;
-#if (TTHREAD_ENABLE_PROF == 0)
-  (void)waitstate;
-#endif
 
   if (target)
   {
-#if (TTHREAD_ENABLE_PROF != 0)
     target->waitstate = waitstate;
-#endif
     *from = target->follower;
 
     if (to)
@@ -78,10 +73,14 @@ static inline void tth_cs_move(tth_thread **from, tth_thread **to, int waitstate
       priority = target->schedpriority;
       while(((next = *to) != NULL) && (next->schedpriority >= priority))
       {
-        to = (tth_thread **)&(next->follower);
+        to = &next->follower;
       }
       target->follower = next;
       *to = target;
+    }
+    else
+    {
+      target->follower = NULL;
     }
   }
 }

@@ -62,7 +62,7 @@ int sem_post(sem_t *sem)
 
   if (sem->__priv.waiter)
   {
-    tth_cs_move((tth_thread **)&sem->__priv.waiter, &tth_ready, TTHREAD_WAIT_READY);
+    tth_cs_move(&sem->__priv.waiter, &tth_ready, TTHREAD_WAIT_READY);
     tth_cs_switch();
   }
   else if (sem->__priv.value == SEM_VALUE_MAX)
@@ -93,7 +93,7 @@ int sem_wait(sem_t *sem)
   }
   else
   {
-    tth_cs_move(&tth_ready, (tth_thread **)&sem->__priv.waiter, TTHREAD_WAIT_SEM);
+    tth_cs_move(&tth_ready, &sem->__priv.waiter, TTHREAD_WAIT_SEM);
     tth_cs_switch();
   }
 

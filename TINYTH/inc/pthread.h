@@ -18,7 +18,7 @@ typedef struct
 {
   struct
   {
-    void *thread;
+    struct tth_thread *thread;
   }
   __priv;
 }
@@ -55,8 +55,8 @@ typedef struct
 {
   struct
   {
-    void *waiter;
-    void *owner;
+    struct tth_thread *waiter;
+    struct tth_thread *owner;
   }
   __priv;
 }
@@ -75,7 +75,7 @@ typedef struct
 {
   struct
   {
-    void *waiter;
+    struct tth_thread *waiter;
   }
   __priv;
 }

@@ -39,7 +39,7 @@ int pthread_cond_broadcast(pthread_cond_t *cond)
 
   while (cond->__priv.waiter)
   {
-    tth_cs_move((tth_thread **)&cond->__priv.waiter, &tth_ready, TTHREAD_WAIT_READY);
+    tth_cs_move(&cond->__priv.waiter, &tth_ready, TTHREAD_WAIT_READY);
   }
 
   tth_cs_switch();
@@ -56,7 +56,7 @@ int pthread_cond_signal(pthread_cond_t *cond)
 {
   int lock = tth_cs_begin();
 
-  tth_cs_move((tth_thread **)&cond->__priv.waiter, &tth_ready, TTHREAD_WAIT_READY);
+  tth_cs_move(&cond->__priv.waiter, &tth_ready, TTHREAD_WAIT_READY);
   tth_cs_switch();
   tth_cs_end(lock);
 
@@ -73,7 +73,7 @@ int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
   int result = tth_cs_mutex_unlock(mutex);
   if (result == 0)
   {
-    tth_cs_move(&tth_ready, (tth_thread **)&cond->__priv.waiter, TTHREAD_WAIT_COND);
+    tth_cs_move(&tth_ready, &cond->__priv.waiter, TTHREAD_WAIT_COND);
     tth_cs_switch();
     result = tth_cs_mutex_lock(mutex, 1);
   }
