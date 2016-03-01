@@ -8,19 +8,23 @@ This library can be used as one of BSP types from Nios II Eclipse environment.
 
 ## 使い方 / Usage
 
-1. プロジェクト(qsfファイル)があるフォルダ(またはその中のipフォルダ)に、tinythreadsをcloneします。  
-   Clone tinythreads repository into the folder (or _ip_ folder) which a project (qsf file) is located in.
+1. カスタムIPを置くためのフォルダが用意されていないなら、作成してください。
+   なお、このフォルダはあなたの全プロジェクトから共通で利用する場所とするため、プロジェクトフォルダ(qsfファイルなどがあるフォルダ)の外に作ることをお勧めします。  
+   Prepare your custom IP folder if you don't have that folder.
+   When you creates a new folder, make it in outside of any project folder (which has qsf files etc.) to share this folder in all your projects.
+
+1. QuartusにカスタムIPを置くフォルダを登録してください。Quartusのメニューから、Tool→Options→General→IP Settings→IP Catalog Search Locationsと進み、
+   Global IP search directoriesリストにフォルダのパスを登録します。この際、フォルダ内を再帰的に検索できるように、パスの後ろに \*\*/\* を足してください。  
+   Register your custom IP folder to Quartus. From Quartus menu, open Tool -> Options -> General -> IP Settings -> IP Catalog Search Locations and
+   add your custom IP folder path to Global IP search directories list. When you write path to the folder, you have to add "\*\*/\*" to the tail of
+   path to make search recursive.
+
+1. カスタムIPを置くフォルダに、tinythreadsをcloneします。  
+   Clone tinythreads repository into the your custom IP folder.
 
    ```
-   cd path_to_project/
+   cd path_to_custom_ip_folder/
    git clone https://github.com/kimushu/tinythreads.git
-   ```
-
-1. カスタムIPが検索できるようにするため、IPXファイルを作成します。(TODO: Generate BSP / BSP editor で検索にヒットしない問題あり)  
-   To ensure development tools can lookup this custom IP, make IPX file.
-
-   ```
-   ip-make-ipx --thorough-descent
    ```
 
 1. Nios II Eclipseにて、新規プロジェクトを「Nios II Board Support Package」から作成します。このとき、BSP typeから「TinyThreads」を選んでください。  
