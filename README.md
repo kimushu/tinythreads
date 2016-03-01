@@ -14,9 +14,9 @@ This library can be used as one of BSP types from Nios II Eclipse environment.
    When you creates a new folder, make it in outside of any project folder (which has qsf files etc.) to share this folder in all your projects.
 
 1. QuartusにカスタムIPを置くフォルダを登録してください。Quartusのメニューから、Tool→Options→General→IP Settings→IP Catalog Search Locationsと進み、
-   Global IP search directoriesリストにフォルダのパスを登録します。この際、フォルダ内を再帰的に検索できるように、パスの後ろに \*\*/\* を足してください。  
+   Global IP search directoriesリストにフォルダのパスを登録します。この際、フォルダ内を再帰的に検索できるように、パスの後ろに /\*\*/\* を足してください。  
    Register your custom IP folder to Quartus. From Quartus menu, open Tool -> Options -> General -> IP Settings -> IP Catalog Search Locations and
-   add your custom IP folder path to Global IP search directories list. When you write path to the folder, you have to add "\*\*/\*" to the tail of
+   add your custom IP folder path to Global IP search directories list. When you write path to the folder, you have to add "/\*\*/\*" to the tail of
    path to make search recursive.
 
 1. カスタムIPを置くフォルダに、tinythreadsをcloneします。  
