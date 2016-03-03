@@ -9,9 +9,9 @@ extern "C" {
 
 typedef struct
 {
-  volatile struct
+  struct
   {
-    void *waiter;
+    struct tth_thread *waiter;
     int value;
   }
   __priv;
