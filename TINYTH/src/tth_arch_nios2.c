@@ -6,11 +6,11 @@ extern void tth_int_thread_entry(void);
 /*
  * Initialize thread's stack
  */
-void tth_init_stack(tth_thread *thread, void *local_impure_ptr, void *(*start_routine)(void *), void *arg)
+void tth_init_stack(tth_thread *thread, void *stack_bottom, void *local_impure_ptr, void *(*start_routine)(void *), void *arg)
 {
   void **stack;
 
-  stack = (void **)thread;
+  stack = (void **)stack_bottom;
   *--stack = local_impure_ptr;      /* _impure_ptr */
   *--stack = tth_int_thread_entry;  /* ra */
   *--stack = NULL;                  /* fp */

@@ -46,7 +46,7 @@ extern tth_thread *tth_running;
 extern tth_thread *tth_ready;
 
 /* Architecture dependent functions */
-extern void tth_init_stack(tth_thread *thread, void *local_impure_ptr, void *(*start_routine)(void *), void *arg);
+extern void tth_init_stack(tth_thread *thread, void *stack_bottom, void *local_impure_ptr, void *(*start_routine)(void *), void *arg);
 extern void tth_int_context_switch(void);
 extern int  tth_cs_begin(void);
 extern void tth_cs_end(int lock);

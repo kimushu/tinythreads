@@ -31,7 +31,7 @@ static tth_thread tth_default_thread =
 static tth_thread *tth_detach;
 
 int tth_int_level;
-tth_thread *tth_running = &tth_default_thread;
+tth_thread *tth_running;
 tth_thread *tth_ready = &tth_default_thread;
 
 /*
@@ -78,7 +78,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
   object->autostack = attr->__priv.stackaddr ? NULL : stackaddr;
   object->retval = NULL;
 
-  tth_init_stack(object, reent, start_routine, arg);
+  tth_init_stack(object, object, reent, start_routine, arg);
 
   lock = tth_cs_begin();
   tth_cs_move(&object, &tth_ready, TTHREAD_WAIT_READY);
@@ -239,7 +239,16 @@ static void *tth_idle(void *arg)
  */
 void tth_initialize(void)
 {
-  tth_init_stack(&tth_idle_thread, NULL, tth_idle, NULL);
+  void *stack;
+
+  tth_running = NULL;
+  stack = malloc(PTHREAD_STACK_MIN);
+  if (!stack)
+  {
+    tth_crash();
+  }
+  tth_init_stack(&tth_idle_thread, (char *)stack + PTHREAD_STACK_MIN, NULL, tth_idle, NULL);
+  tth_running = &tth_default_thread;
 }
 
 /*
