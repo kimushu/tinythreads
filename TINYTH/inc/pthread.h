@@ -2,7 +2,7 @@
 #define __PTHREAD_H__
 
 #include <stddef.h>
-#include <sched.h>
+#include "sched.h"
 
 #ifdef __cplusplus
 extern "C" {
