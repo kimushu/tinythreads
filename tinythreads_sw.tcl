@@ -81,5 +81,5 @@ add_sw_setting decimal_number system_h_define scheduling.priority.default SCHED_
 add_sw_setting boolean system_h_define scheduling.policy.default_fifo SCHED_POLICY_DEFAULT_FF 0 "Use FIFO policy (SCHED_FF) by default. If disabled, round-robin policy (SCHED_RR) is used by default."
 
 # pthread settings
-add_sw_setting hex_number system_h_define pthreads.min_stack_size PTHREAD_STACK_MIN 0x1000 "Minimum stack size for threads"
+add_sw_setting hex_number system_h_define pthreads.min_stack_size PTHREAD_STACK_MIN_OVERRIDE 0x1000 "Minimum stack size for threads"
 
