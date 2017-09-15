@@ -61,10 +61,14 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
     }
   }
 
+#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)  
   reent = ((struct _reent *)((uintptr_t)stackaddr + attr->__priv.stacksize)) - 1;
   _REENT_INIT_PTR(reent);
-
   object = ((tth_thread *)reent) - 1;
+#else   /* !TTHREAD_THREAD_SAFE_NEWLIB */
+  reent = NULL;
+  object = ((tth_thread *)((uintptr_t)stackaddr + attr->__priv.stacksize)) - 1;
+#endif  /* !TTHREAD_THREAD_SAFE_NEWLIB */
   thread->__priv.thread = object;
 
   // object->context will be initialized in tth_init_stack()

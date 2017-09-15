@@ -11,7 +11,11 @@ void tth_init_stack(tth_thread *thread, void *stack_bottom, void *local_impure_p
   void **stack;
 
   stack = (void **)stack_bottom;
+#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)
   *--stack = local_impure_ptr;      /* _impure_ptr */
+#else
+  (void)local_impure_ptr;
+#endif  /* TTHREAD_THREAD_SAFE_NEWLIB */
   *--stack = tth_int_thread_entry;  /* ra */
   *--stack = NULL;                  /* fp */
   *--stack = (void *)0xdeadbeef;    /* r23 */

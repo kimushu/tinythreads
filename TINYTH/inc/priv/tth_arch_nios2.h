@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <system.h>
 
+#if defined(SMALL_C_LIB) && (TTHREAD_THREAD_SAFE_NEWLIB != 0)
+# error "Small C library is not thread-safe. Turn off 'enable_small_c_library' to use thread-safe environment."
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

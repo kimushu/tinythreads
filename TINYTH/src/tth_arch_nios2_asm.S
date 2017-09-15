@@ -8,10 +8,16 @@
     .func   tth_int_context_switch
 tth_int_context_switch:
     /* allocate register save area */
+#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)
     subi    sp,  sp, 44
+#else   /* !TTHREAD_THREAD_SAFE_NEWLIB */
+    subi    sp,  sp, 40
+#endif  /* !TTHREAD_THREAD_SAFE_NEWLIB */
     ldw     r4,  %gprel(tth_running)(gp)
     ldw     r5,  %gprel(tth_ready)(gp)
+#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)
     ldw     r6,  %gprel(_impure_ptr)(gp)
+#endif  /* TTHREAD_THREAD_SAFE_NEWLIB */
     /* store callee-saved registers */
     stw     r16, 0(sp)
     stw     r17, 4(sp)
@@ -26,19 +32,23 @@ tth_int_context_switch:
 #if (TTHREAD_ENABLE_PROF != 0)
     /* load switch count */
     ldw     r3,  4(r5)
-#endif
+#endif  /* TTHREAD_ENABLE_PROF */
+#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)
     /* store _impure_ptr */
     stw     r6,  40(sp)
+#endif  /* TTHREAD_THREAD_SAFE_NEWLIB */
     /* store stack pointer */
     stw     sp,  0(r4)
     /* switch (load stack pointer) */
     ldw     sp,  0(r5)
     stw     r5,  %gprel(tth_running)(gp)
+#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)
     ldw     r6,  40(sp)
+#endif  /* TTHREAD_THREAD_SAFE_NEWLIB */
 #if (TTHREAD_ENABLE_PROF != 0)
     /* increment switch count */
     addi    r3,  r3, 1
-#endif
+#endif  /* TTHREAD_ENABLE_PROF */
     /* load callee-saved registers */
     ldw     ra,  36(sp)
     ldw     fp,  32(sp)
@@ -50,13 +60,17 @@ tth_int_context_switch:
     ldw     r18, 8(sp)
     ldw     r17, 4(sp)
     ldw     r16, 0(sp)
+#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)
     addi    sp,  sp, 44
     /* load _impure_ptr */
     stw     r6,  %gprel(_impure_ptr)(gp)
+#else   /* !TTHREAD_THREAD_SAFE_NEWLIB */
+    addi    sp,  sp, 40
+#endif  /* !TTHREAD_THREAD_SAFE_NEWLIB */
 #if (TTHREAD_ENABLE_PROF != 0)
     /* store switch count */
     stw     r3,  4(r5)
-#endif
+#endif  /* TTHREAD_ENABLE_PROF */
     ret
     .endfunc
 

@@ -82,4 +82,4 @@ add_sw_setting boolean system_h_define scheduling.policy.default_fifo SCHED_POLI
 
 # pthread settings
 add_sw_setting hex_number system_h_define pthreads.min_stack_size PTHREAD_STACK_MIN_OVERRIDE 0x1000 "Minimum stack size for threads"
-
+add_sw_setting boolean system_h_define pthreads.thread_safe_newlib TTHREAD_THREAD_SAFE_NEWLIB 1 "Use thread safe C library"
