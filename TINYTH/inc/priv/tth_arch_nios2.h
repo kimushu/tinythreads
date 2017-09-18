@@ -8,6 +8,10 @@
 # error "Small C library is not thread-safe. Turn off 'enable_small_c_library' to use thread-safe environment."
 #endif
 
+#if defined(SMALL_C_LIB)
+# define TTHREAD_MALLOC_LOCK 1
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

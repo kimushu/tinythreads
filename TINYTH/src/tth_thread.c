@@ -4,6 +4,11 @@
 #include <malloc.h>
 #include <string.h>
 
+#ifdef TTHREAD_MALLOC_LOCK
+extern void __malloc_lock(struct _reent *);
+extern void __malloc_unlock(struct _reent *);
+#endif
+
 /*
  * Idle thread (always ready)
  */
@@ -54,7 +59,13 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
   stackaddr = attr->__priv.stackaddr;
   if (!stackaddr)
   {
+#ifdef TTHREAD_MALLOC_LOCK
+    __malloc_lock(_impure_ptr);
+#endif
     stackaddr = malloc(attr->__priv.stacksize);
+#ifdef TTHREAD_MALLOC_LOCK
+    __malloc_unlock(_impure_ptr);
+#endif
     if (!stackaddr)
     {
       return ENOMEM;
@@ -228,7 +239,13 @@ static void *tth_idle(void *arg)
       tth_detach = tth_detach->follower;
       tth_cs_end(lock);
 
+#ifdef TTHREAD_MALLOC_LOCK
+      __malloc_lock(_impure_ptr);
+#endif
       free(stack);
+#ifdef TTHREAD_MALLOC_LOCK
+      __malloc_unlock(_impure_ptr);
+#endif
     }
 
     sched_yield();
