@@ -139,7 +139,7 @@ This feature is available when both of BSP setting (tinyth.feature.enable\_once 
 
 ### pthreads以外の機能 / Features outside of pthreads
 
-以下のAPIは、本来pthreadsのカバーする範囲ではありませんが、マルチスレッド環境により適切な実装をTinyThreadsが提供できるものです。BSP設定(tinyth.feature.enable\_sleep)が有効の時に使用可能です(既定値は有効)。  
+以下のAPIは、本来pthreadsのカバーする範囲ではありませんが、マルチスレッド環境に対して効率的な実装をTinyThreadsが提供できるものです。BSP設定(tinyth.feature.enable\_sleep)が有効の時に使用可能です(既定値は有効)。  
 The following APIs are outside of pthreads but TinyThreads can provide a more effective implementation for multi-threading environment. This feature is available when BSP setting (tinyth.feature.enable\_sleep) is enabled (default: enable).
 
 | Interface | Name                | Conforming to | Remarks     |
