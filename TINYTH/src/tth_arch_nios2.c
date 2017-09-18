@@ -30,5 +30,18 @@ void tth_init_stack(tth_thread *thread, void *stack_bottom, void *local_impure_p
   thread->context = stack;
 }
 
+#if (TTHREAD_ENABLE_SLEEP == 0)
+# include <unistd.h>
+# include "priv/alt_busy_sleep.h"
+# include "os/alt_syscall.h"
+/*
+ * Default usleep()
+ */
+int ALT_USLEEP(useconds_t us)
+{
+  return alt_busy_sleep(us);
+}
+#endif  /* !TTHREAD_ENABLE_SLEEP */
+
 #endif  /* __NIOS2__ */
 /* vim: set et sts=2 sw=2: */

@@ -91,7 +91,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
   object->schedpolicy = attr->__priv.schedpolicy;
   object->waitstate = TTHREAD_WAIT_INVAL;
   object->autostack = attr->__priv.stackaddr ? NULL : stackaddr;
-  object->retval = NULL;
+  object->shared.retval = NULL;
 
   tth_init_stack(object, object, reent, start_routine, arg);
 
@@ -113,7 +113,7 @@ void pthread_exit(void *retval)
 
   tth_cs_begin();
 
-  target->retval = retval;
+  target->shared.retval = retval;
   target->context = NULL;
 
   if (target->detachstate == PTHREAD_CREATE_JOINABLE)
@@ -161,7 +161,7 @@ int pthread_join(pthread_t thread, void **retval)
     /* Target thread has been finished */
     if (retval)
     {
-      *retval = target->retval;
+      *retval = target->shared.retval;
     }
 
     tth_cs_move(&target, &tth_detach, TTHREAD_WAIT_DEAD);
@@ -309,20 +309,24 @@ void tth_int_exit(void)
  */
 void tth_int_tick(void)
 {
+#if (TTHREAD_ENABLE_SLEEP != 0)
+  extern void tth_sleep_tick(void);
+  tth_sleep_tick();
+#endif  /* TTHREAD_ENABLE_SLEEP */
 #if (TTHREAD_PREEMPTION_ENABLE != 0)
 #if (TTHREAD_PREEMPTION_INTERVAL > 0)
-#if (TTHREAD_PREEMPTION_INTERVAL > 1)
-  static int preemption_count;
-  if (++preemption_count < TTHREAD_PREEMPTION_INTERVAL)
+  static int preemption_us;
+  preemption_us += (1000000 / TTHREAD_TICKS_PER_SEC);
+  if (preemption_us < (TTHREAD_PREEMPTION_INTERVAL * 1000))
   {
     return;
   }
-  preemption_count = 0;
-#endif  /* TTHREAD_PREEMPTION_INTERVAL > 1 */
-  if (tth_running->schedpolicy == SCHED_RR) {
+  preemption_us -= (TTHREAD_PREEMPTION_INTERVAL * 1000);
+#endif  /* TTHREAD_PREEMPTION_INTERVAL > 0 */
+  if (tth_running->schedpolicy == SCHED_RR)
+  {
     sched_yield();
   }
-#endif  /* TTHREAD_PREEMPTION_INTERVAL > 0 */
 #endif  /* TTHREAD_PREEMPTION_ENABLE */
 }
 

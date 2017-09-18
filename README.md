@@ -137,6 +137,16 @@ This feature is available when both of BSP setting (tinyth.feature.enable\_once 
 | Macro     | PTHREAD\_ONCE\_INIT | POSIX.1-2001  | |
 | Function  | pthread\_once()     | POSIX.1-2001  | |
 
+### pthreads以外の機能 / Features outside of pthreads
+
+以下のAPIは、本来pthreadsのカバーする範囲ではありませんが、マルチスレッド環境により適切な実装をTinyThreadsが提供できるものです。BSP設定(tinyth.feature.enable\_sleep)が有効の時に使用可能です(既定値は有効)。  
+The following APIs are outside of pthreads but TinyThreads can provide a more effective implementation for multi-threading environment. This feature is available when BSP setting (tinyth.feature.enable\_sleep) is enabled (default: enable).
+
+| Interface | Name                | Conforming to | Remarks     |
+|:----------|:--------------------|:--------------|:------------|
+| Function  | sleep()             | POSIX.1-2001  | &lt;unistd.h&gt; |
+| Function  | usleep()            | POSIX.1-2001  | &lt;unistd.h&gt; |
+
 ## 削除されている機能 / Dropped features
 
 以下に挙げる機能はTinyThreadsが目指す「小さなマルチスレッド環境」に不要と判断され、
