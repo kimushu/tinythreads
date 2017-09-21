@@ -5,11 +5,19 @@
 #include <system.h>
 
 #if defined(SMALL_C_LIB) && (TTHREAD_THREAD_SAFE_NEWLIB != 0)
-# error "Small C library is not thread-safe. Turn off 'enable_small_c_library' to use thread-safe environment."
+# error "Small C library is not thread-safe. Turn off 'hal.enable_small_c_library' to use thread-safe environment."
 #endif
 
 #if defined(SMALL_C_LIB)
 # define TTHREAD_MALLOC_LOCK 1
+#endif
+
+#if defined(ALT_EXCEPTION_STACK)
+# error "TinyThreads does not support separate exception stack. Turn off 'hal.linker.enable_exception_stack'"
+#endif
+
+#if defined(ALT_INTERRUPT_STACK)
+# error "TinyThreads does not support separate interrupt stack. Turn off 'hal.linker.enable_interrupt_stack'"
 #endif
 
 #ifdef __cplusplus
