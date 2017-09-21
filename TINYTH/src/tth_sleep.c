@@ -7,6 +7,7 @@ tth_thread *tth_sleeping;
 static unsigned int tth_time;
 
 /*
+ * [POSIX.1-2001]
  * Sleep current thread for the specified number of seconds
  */
 unsigned int sleep(unsigned int seconds)
@@ -24,6 +25,7 @@ unsigned int sleep(unsigned int seconds)
 }
 
 /*
+ * [POSIX.1-2001]
  * Sleep current thread for the specified number of microseconds
  */
 int usleep(useconds_t us)
