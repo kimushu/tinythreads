@@ -189,6 +189,10 @@ extern int pthread_spin_lock(pthread_spinlock_t *lock);
 extern int pthread_spin_trylock(pthread_spinlock_t *lock);
 extern int pthread_spin_unlock(pthread_spinlock_t *lock);
 
+/* Thread name (Non standard) */
+extern int pthread_setname_np(pthread_t thread, const char *name);
+extern int pthread_getname_np(pthread_t thread, char *name, size_t len);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

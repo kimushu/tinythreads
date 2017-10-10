@@ -9,11 +9,19 @@ extern void __malloc_lock(struct _reent *);
 extern void __malloc_unlock(struct _reent *);
 #endif
 
+#define TTHREAD_NAME_MAX_LEN  16
+
 /*
  * Idle thread (always ready)
  */
+#if (TTHREAD_ENABLE_NAME != 0)
+static char tth_idle_thread_name[TTHREAD_NAME_MAX_LEN] = "tth-idle";
+#endif
 static tth_thread tth_idle_thread =
 {
+#if (TTHREAD_ENABLE_NAME != 0)
+  .name           = tth_idle_thread_name,
+#endif
   .waiter         = NULL,
   .follower       = NULL,
   .detachstate    = PTHREAD_CREATE_DETACHED,
@@ -24,8 +32,14 @@ static tth_thread tth_idle_thread =
 /*
  * Default thread
  */
+#if (TTHREAD_ENABLE_NAME != 0)
+static char tth_default_thread_name[TTHREAD_NAME_MAX_LEN] = "tth-default";
+#endif
 static tth_thread tth_default_thread =
 {
+#if (TTHREAD_ENABLE_NAME != 0)
+  .name           = tth_default_thread_name,
+#endif
   .waiter         = NULL,
   .follower       = &tth_idle_thread,
   .detachstate    = PTHREAD_CREATE_JOINABLE,
@@ -80,6 +94,11 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
   reent = NULL;
   object = ((tth_thread *)((uintptr_t)stackaddr + attr->__priv.stacksize)) - 1;
 #endif  /* !TTHREAD_THREAD_SAFE_NEWLIB */
+#if (TTHREAD_ENABLE_NAME != 0)
+  object = (tth_thread *)((uintptr_t)object - TTHREAD_NAME_MAX_LEN);
+  object->name = (char *)(object + 1);
+  object->name[0] = '\0';
+#endif  /* TTHREAD_ENABLE_NAME */
   thread->__priv.thread = object;
 
   // object->context will be initialized in tth_init_stack()
@@ -218,6 +237,46 @@ pthread_t pthread_self(void)
 int pthread_equal(pthread_t t1, pthread_t t2)
 {
   return t1.__priv.thread == t2.__priv.thread;
+}
+
+/*
+ * [Non Standard]
+ * Set the name of a thread
+ */
+int pthread_setname_np(pthread_t thread, const char *name)
+{
+#if (TTHREAD_ENABLE_NAME != 0)
+  tth_thread *target = thread.__priv.thread;
+  int name_len = strlen(name) + 1;
+  if (name_len > TTHREAD_NAME_MAX_LEN)
+  {
+    return ERANGE;
+  }
+  memcpy(target->name, name, name_len + 1);
+  return 0;
+#else   /* !TTHREAD_ENABLE_NAME */
+  return ENOTSUP;
+#endif  /* !TTHREAD_ENABLE_NAME */
+}
+
+/*
+ * [Non Standard]
+ * Get the name of a thread
+ */
+int pthread_getname_np(pthread_t thread, char *name, size_t len)
+{
+#if (TTHREAD_ENABLE_NAME != 0)
+  tth_thread *target = thread.__priv.thread;
+  int name_len = strlen(target->name) + 1;
+  if (len < name_len)
+  {
+    return ERANGE;
+  }
+  memcpy(name, target->name, name_len);
+  return 0;
+#else   /* !TTHREAD_ENABLE_NAME */
+  return ENOTSUP;
+#endif  /* !TTHREAD_ENABLE_NAME */
 }
 
 /*

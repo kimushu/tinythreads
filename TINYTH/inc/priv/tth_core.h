@@ -31,6 +31,9 @@ typedef struct tth_thread
 {
   void *context;          /* Must be 1st item in tth_thread */
   unsigned int switches;  /* Must be 2nd item in tth_thread */
+#if (TTHREAD_ENABLE_NAME != 0)
+  char *name;
+#endif
   struct tth_thread *waiter;
   struct tth_thread *follower;
   unsigned char detachstate;

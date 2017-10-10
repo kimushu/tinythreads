@@ -76,6 +76,7 @@ add_sw_setting boolean system_h_define feature.enable_rwlock TTHREAD_ENABLE_RWLO
 add_sw_setting boolean system_h_define feature.enable_spin TTHREAD_ENABLE_SPIN 1 "Enable pthread_spin*() APIs"
 add_sw_setting boolean system_h_define feature.enable_sleep TTHREAD_ENABLE_SLEEP 1 "Enable sleep()/usleep() APIs"
 add_sw_setting boolean system_h_define feature.enable_profile TTHREAD_ENABLE_PROF 0 "Enable internal profiling (Switch counter / Wait state monitor)"
+add_sw_setting boolean system_h_define feature.enable_name TTHREAD_ENABLE_NAME 0 "Enable thread name for debugging"
 
 # Scheduling settings
 add_sw_setting boolean system_h_define scheduling.preemption.enabled TTHREAD_PREEMPTION_ENABLE 1 "Enable preemption based on system tick"
