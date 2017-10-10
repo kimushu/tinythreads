@@ -30,7 +30,9 @@ enum
 typedef struct tth_thread
 {
   void *context;          /* Must be 1st item in tth_thread */
+#if (TTHREAD_ENABLE_PROF != 0)
   unsigned int switches;  /* Must be 2nd item in tth_thread */
+#endif
 #if (TTHREAD_ENABLE_NAME != 0)
   char *name;
 #endif
