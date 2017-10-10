@@ -24,7 +24,7 @@ enum
   TTHREAD_WAIT_MUTEX  = 'M',  /* pthread_mutex_lock */
   TTHREAD_WAIT_SEM    = 'S',  /* sem_wait           */
   TTHREAD_WAIT_COND   = 'C',  /* pthread_cond_wait  */
-  TTHREAD_WAIT_SLEEP  = 'S',  /* usleep             */
+  TTHREAD_WAIT_SLEEP  = 'Z',  /* usleep             */
 };
 
 typedef struct tth_thread
