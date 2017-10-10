@@ -53,7 +53,7 @@ int sem_getvalue(sem_t *sem, int *sval)
 /*
  * [POSIX.1-2001]
  * Unlock a semaphore
- * (Async-signal-safe funcion)
+ * (Async-signal-safe function)
  */
 int sem_post(sem_t *sem)
 {
