@@ -107,7 +107,7 @@ This feature is available when BSP setting (tinyth.feature.enable\_sem) is enabl
 | Type      | sem\_t         | POSIX.1-2001  | &lt;semaphore.h&gt; |
 | Function  | sem\_destroy() | POSIX.1-2001  | &lt;semaphore.h&gt; |
 | Function  | sem\_init()    | POSIX.1-2001  | &lt;semaphore.h&gt; |
-| Function  | sem\_post()    | POSIX.1-2001  | &lt;semaphore.h&gt; Can be used in ISR |
+| Function  | sem\_post()    | POSIX.1-2001  | &lt;semaphore.h&gt;<br>Can be used in ISR |
 | Function  | sem\_wait()    | POSIX.1-2001  | &lt;semaphore.h&gt; |
 | Function  | sem\_trywait() | POSIX.1-2001  | &lt;semaphore.h&gt; |
 
@@ -122,9 +122,12 @@ This feature is available when both of BSP setting (tinyth.feature.enable\_cond 
 | Macro     | PTHREAD\_COND\_INITIALIZER | POSIX.1-2001  | |
 | Function  | pthread\_cond\_destroy()   | POSIX.1-2001  | |
 | Function  | pthread\_cond\_init()      | POSIX.1-2001  | |
-| Function  | pthread\_cond\_broadcast() | POSIX.1-2001  | |
-| Function  | pthread\_cond\_signal()    | POSIX.1-2001  | |
+| Function  | pthread\_cond\_broadcast() | POSIX.1-2001  | \*Can be used in ISR |
+| Function  | pthread\_cond\_signal()    | POSIX.1-2001  | \*Can be used in ISR |
 | Function  | pthread\_cond\_wait()      | POSIX.1-2001  | |
+
+\* ISR-safe of these functions is peculiar to TinyThreads.  
+\* これらの関数がISR-safeであるのは、TinyThreads特有です。
 
 ### 1回きりの初期化 / Once control
 
@@ -146,6 +149,23 @@ The following APIs are outside of pthreads but TinyThreads can provide a more ef
 |:----------|:--------------------|:--------------|:------------|
 | Function  | sleep()             | POSIX.1-2001  | &lt;unistd.h&gt; |
 | Function  | usleep()            | POSIX.1-2001  | &lt;unistd.h&gt; |
+
+### フラグ / Flags (Altera HAL for Nios II only)
+
+BSP設定(tinyth.feature.enable\_flag、tinyth.feature.enable\_condおよびtinyth.feature.enable\_mutex)すべてが有効で、ターゲットがNios IIのときに使用可能です(既定値は有効)。  
+This feature is available in Nios II when all of BSP settings (tinyth.feature.enable\_flag, tinyth.feature.enable\_cond and tinyth.feature.enable\_mutex) are enabled (default: enable).
+
+この機能は条件変数(pthread\_cond\_\*)を用いて実装されています。  
+This feature is implemented by conditional variables (pthread\_cond\_\*).
+
+| Interface | Name                   | Conforming to   | Remarks     |
+|:----------|:-----------------------|:----------------|:------------|
+| Macro     | ALT\_FLAG\_GRP         | Altera HAL 17.0 | &lt;os/alt_flag.h&gt; |
+| Macro     | ALT\_EXTERN\_FLAG\_GRP | Altera HAL 17.0 | &lt;os/alt_flag.h&gt; |
+| Macro     | ALT\_STATIC\_FLAG\_GRP | Altera HAL 17.0 | &lt;os/alt_flag.h&gt; |
+| Function  | ALT\_FLAG\_CREATE()    | Altera HAL 17.0 | &lt;os/alt_flag.h&gt; |
+| Function  | ALT\_FLAG\_PEND()      | Altera HAL 17.0 | &lt;os/alt_flag.h&gt;<br>(timeout is not supported) |
+| Function  | ALT\_FLAG\_POST()      | Altera HAL 17.0 | &lt;os/alt_flag.h&gt; |
 
 ## 削除されている機能 / Dropped features
 

@@ -66,7 +66,6 @@ static inline void tth_cs_exec_switch(void)
 {
   /*
    * Issue "trap <imm5>" instruction
-   * 24 means 24th alphabet "T" -- the first letter of TinyThreads.
    */
   __asm__ volatile("trap 24");
 }

@@ -13,7 +13,7 @@ set_sw_property display_name "TinyThreads"
 set_sw_property extends_bsp_type HAL
 
 # The version of this software
-set_sw_property version 1.0
+set_sw_property version 1.1
 
 # Localtion in generated BSP
 set_sw_property bsp_subdirectory TINYTH
@@ -23,6 +23,7 @@ set_sw_property isr_preemption_supported true
 
 # C source files
 add_sw_property c_source TINYTH/src/alt_env_lock.c
+add_sw_property c_source TINYTH/src/alt_flag.c
 add_sw_property c_source TINYTH/src/alt_malloc_lock.c
 add_sw_property c_source TINYTH/src/tth_arch_nios2.c
 add_sw_property c_source TINYTH/src/tth_attr.c
@@ -38,6 +39,7 @@ add_sw_property c_source TINYTH/src/tth_thread.c
 add_sw_property asm_source TINYTH/src/tth_arch_nios2_asm.S
 
 # Include files
+add_sw_property include_source TINYTH/inc/os/alt_flag.h
 add_sw_property include_source TINYTH/inc/os/alt_hooks.h
 add_sw_property include_source TINYTH/inc/os/alt_sem.h
 add_sw_property include_source TINYTH/inc/priv/tth_arch_nios2.h
@@ -52,6 +54,7 @@ add_sw_property include_source TINYTH/inc/tthread.h
 add_sw_property excluded_hal_source HAL/src/alt_env_lock.c
 add_sw_property excluded_hal_source HAL/src/alt_malloc_lock.c
 add_sw_property excluded_hal_source HAL/src/alt_usleep.c
+add_sw_property excluded_hal_source HAL/inc/os/alt_flag.h
 add_sw_property excluded_hal_source HAL/inc/os/alt_hooks.h
 add_sw_property excluded_hal_source HAL/inc/os/alt_sem.h
 
@@ -76,6 +79,7 @@ add_sw_setting boolean system_h_define feature.enable_rwlock TTHREAD_ENABLE_RWLO
 add_sw_setting boolean system_h_define feature.enable_spin TTHREAD_ENABLE_SPIN 1 "Enable pthread_spin*() APIs"
 add_sw_setting boolean system_h_define feature.enable_sleep TTHREAD_ENABLE_SLEEP 1 "Enable sleep()/usleep() APIs"
 add_sw_setting boolean system_h_define feature.enable_profile TTHREAD_ENABLE_PROF 0 "Enable internal profiling (Switch counter / Wait state monitor)"
+add_sw_setting boolean system_h_define feature.enable_flag TTHREAD_ENABLE_FLAG 1 "Enable ALT_FLAG_* macros"
 add_sw_setting boolean system_h_define feature.enable_name TTHREAD_ENABLE_NAME 0 "Enable thread name for debugging"
 
 # Scheduling settings

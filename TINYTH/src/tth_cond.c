@@ -32,6 +32,7 @@ int pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr)
 /*
  * [POSIX.1-2001]
  * Broadcast a condition
+ * (Async-signal-safe function)
  */
 int pthread_cond_broadcast(pthread_cond_t *cond)
 {
@@ -51,6 +52,7 @@ int pthread_cond_broadcast(pthread_cond_t *cond)
 /*
  * [POSIX.1-2001]
  * Signal a condition
+ * (Async-signal-safe function)
  */
 int pthread_cond_signal(pthread_cond_t *cond)
 {
