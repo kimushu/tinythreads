@@ -183,7 +183,15 @@ int pthread_join(pthread_t thread, void **retval)
       *retval = target->shared.retval;
     }
 
-    tth_cs_move(&target, &tth_detach, TTHREAD_WAIT_DEAD);
+    tth_cs_end(lock);
+#ifdef TTHREAD_MALLOC_LOCK
+    __malloc_lock(_impure_ptr);
+#endif
+    free(target->autostack);
+#ifdef TTHREAD_MALLOC_LOCK
+    __malloc_unlock(_impure_ptr);
+#endif
+    return 0;
   }
 
   tth_cs_end(lock);
