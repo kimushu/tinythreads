@@ -30,8 +30,11 @@ enum
 typedef struct tth_thread
 {
   void *context;          /* Must be 1st item in tth_thread */
+#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)
+  void *reent;            /* Must be 2nd item in tth_thread */
+#endif
 #if (TTHREAD_ENABLE_PROF != 0)
-  unsigned int switches;  /* Must be 2nd item in tth_thread */
+  unsigned int switches;  /* Must be 2nd/3rd item in tth_thread */
 #endif
 #if (TTHREAD_ENABLE_NAME != 0)
   char *name;
@@ -49,6 +52,9 @@ typedef struct tth_thread
     unsigned int timeout;
   }
   shared;
+#ifdef TTHREAD_ARCH_THREAD_TYPE
+  TTHREAD_ARCH_THREAD_TYPE arch;
+#endif
 }
 tth_thread;
 
@@ -57,11 +63,12 @@ extern tth_thread *tth_running;
 extern tth_thread *tth_ready;
 
 /* Architecture dependent functions */
-extern void tth_init_stack(tth_thread *thread, void *stack_bottom, void *local_impure_ptr, void *(*start_routine)(void *), void *arg);
-extern void tth_int_context_switch(void);
-extern int  tth_cs_begin(void);
-extern void tth_cs_end(int lock);
-extern void tth_cs_exec_switch(void);
+extern void tth_arch_initialize(void);
+extern void *tth_arch_init_stack(void *stack_bottom, void *(*start_routine)(void *), void *arg);
+extern int  tth_arch_cs_begin(void);
+extern void tth_arch_cs_end(int lock);
+extern void tth_arch_cs_exec_switch(void);
+extern void tth_arch_cs_cleanup(tth_thread *thread);
 
 /* Prototype for inline functions */
 static inline void tth_cs_move(tth_thread **from, tth_thread **to, int waitstate) __attribute__((always_inline));
@@ -101,7 +108,7 @@ static inline void tth_cs_switch(void)
 {
   if ((tth_int_level == 0) && (tth_running != tth_ready))
   {
-    tth_cs_exec_switch();
+    tth_arch_cs_exec_switch();
   }
 }
 
@@ -110,4 +117,3 @@ static inline void tth_cs_switch(void)
 #endif
 
 #endif  /* __PRIV_TTH_CORE_H__ */
-/* vim: set et sts=2 sw=2: */

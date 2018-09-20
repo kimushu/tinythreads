@@ -12,4 +12,3 @@
 #define ALT_SEM_POST(sem)           sem_post(&sem)
 
 #endif  /* __ALT_SEM_H__ */
-/* vim: set et sts=2 sw=2: */

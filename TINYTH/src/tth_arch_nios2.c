@@ -1,33 +1,78 @@
 #ifdef __NIOS2__
 #include <priv/tth_core.h>
+#include <alt_types.h>
 
-extern void tth_int_thread_entry(void);
+extern void tth_arch_thread_entry(void);
 
+#if (TTHREAD_ENABLE_SRS != 0)
+# if (ALT_CPU_NUM_OF_SHADOW_REG_SETS < 8)
+typedef alt_u8 regset_t;
+# elif (ALT_CPU_NUM_OF_SHADOW_REG_SETS < 16)
+typedef alt_u16 regset_t;
+# elif (ALT_CPU_NUM_OF_SHADOW_REG_SETS < 32)
+typedef alt_u32 regset_t;
+# else
+typedef alt_u64 regset_t;
+# endif
+regset_t tth_nios2_srs = 3;
+#endif
+
+int tth_nios2_switch;
+
+#if (TTHREAD_ENABLE_SRS != 0)
 /*
- * Initialize thread's stack
+ * Allocate free shadow register set
  */
-void tth_init_stack(tth_thread *thread, void *stack_bottom, void *local_impure_ptr, void *(*start_routine)(void *), void *arg)
+int tth_nios2_alloc_srs(void)
 {
-  void **stack;
+  int lock = tth_arch_cs_begin();
+  regset_t bits = ~tth_nios2_srs;
+  int srs;
 
-  stack = (void **)stack_bottom;
-#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)
-  *--stack = local_impure_ptr;      /* _impure_ptr */
+  /* Search first zero from LSB */
+  bits = (bits & (-bits)) - 1;
+  bits = (bits & 0x5555555555555555u) + ((bits >>  1) & 0x5555555555555555u);
+  bits = (bits & 0x3333333333333333u) + ((bits >>  2) & 0x3333333333333333u);
+  bits = (bits & 0x0707070707070707u) + ((bits >>  4) & 0x0707070707070707u);
+#if (ALT_CPU_NUM_OF_SHADOW_REG_SETS >= 8)
+  bits = (bits & 0x000f000f000f000fu) + ((bits >>  8) & 0x000f000f000f000fu);
+# if (ALT_CPU_NUM_OF_SHADOW_REG_SETS >= 16)
+  bits = (bits & 0x0000001f0000001fu) + ((bits >> 16) & 0x0000001f0000001fu);
+#  if (ALT_CPU_NUM_OF_SHADOW_REG_SETS >= 32)
+  srs  = (bits & 0x000000000000003fu) + ((bits >> 32) & 0x000000000000003fu);
+#  else
+  srs = bits;
+#  endif
+# else
+  srs = bits;
+# endif
 #else
-  (void)local_impure_ptr;
-#endif  /* TTHREAD_THREAD_SAFE_NEWLIB */
-  *--stack = tth_int_thread_entry;  /* ra */
-  *--stack = NULL;                  /* fp */
-  *--stack = (void *)0xdeadbeef;    /* r23 */
-  *--stack = (void *)0xdeadbeef;    /* r22 */
-  *--stack = (void *)0xdeadbeef;    /* r21 */
-  *--stack = (void *)0xdeadbeef;    /* r20 */
-  *--stack = (void *)0xdeadbeef;    /* r19 */
-  *--stack = (void *)0xdeadbeef;    /* r18 */
-  *--stack = arg;                   /* r17 */
-  *--stack = start_routine;         /* r16 */
+  srs = bits;
+#endif
 
-  thread->context = stack;
+  if (srs > ALT_CPU_NUM_OF_SHADOW_REG_SETS)
+  {
+    srs = 0;
+  }
+  else
+  {
+    tth_nios2_srs |= (1u << srs);
+  }
+
+  tth_arch_cs_end(lock);
+  return srs;
+}
+#endif  /* TTHREAD_ENABLE_SRS */
+
+void tth_arch_cs_cleanup(tth_thread *thread)
+{
+#if (TTHREAD_ENABLE_SRS != 0)
+  int srs = thread->arch.srs;
+  if (srs > 0)
+  {
+    tth_nios2_srs &= ~(((regset_t)1u) << srs);
+  }
+#endif  /* TTHREAD_ENABLE_SRS */
 }
 
 #if (TTHREAD_ENABLE_SLEEP == 0)
@@ -44,4 +89,3 @@ int ALT_USLEEP(useconds_t us)
 #endif  /* !TTHREAD_ENABLE_SLEEP */
 
 #endif  /* __NIOS2__ */
-/* vim: set et sts=2 sw=2: */

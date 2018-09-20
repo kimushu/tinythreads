@@ -13,7 +13,7 @@ set_sw_property display_name "TinyThreads"
 set_sw_property extends_bsp_type HAL
 
 # The version of this software
-set_sw_property version 1.1
+set_sw_property version 1.2
 
 # Localtion in generated BSP
 set_sw_property bsp_subdirectory TINYTH
@@ -49,6 +49,8 @@ add_sw_property include_source TINYTH/inc/semaphore.h
 add_sw_property include_source TINYTH/inc/tthread.h
 
 # Overridden HAL files
+add_sw_property excluded_hal_source HAL/src/alt_exception_entry.S
+add_sw_property excluded_hal_source HAL/src/alt_exception_trap.S
 add_sw_property excluded_hal_source HAL/src/alt_env_lock.c
 add_sw_property excluded_hal_source HAL/src/alt_malloc_lock.c
 add_sw_property excluded_hal_source HAL/src/alt_usleep.c
@@ -75,8 +77,9 @@ add_sw_setting boolean system_h_define feature.enable_once TTHREAD_ENABLE_ONCE 1
 add_sw_setting boolean system_h_define feature.enable_rwlock TTHREAD_ENABLE_RWLOCK 1 "Enable pthread_rwlock*() APIs"
 add_sw_setting boolean system_h_define feature.enable_spin TTHREAD_ENABLE_SPIN 1 "Enable pthread_spin*() APIs"
 add_sw_setting boolean system_h_define feature.enable_sleep TTHREAD_ENABLE_SLEEP 1 "Enable sleep()/usleep() APIs"
-add_sw_setting boolean system_h_define feature.enable_profile TTHREAD_ENABLE_PROF 0 "Enable internal profiling (Switch counter / Wait state monitor)"
+add_sw_setting boolean system_h_define feature.enable_profile TTHREAD_ENABLE_PROF 0 "Enable internal profiling (Switch counter)"
 add_sw_setting boolean system_h_define feature.enable_name TTHREAD_ENABLE_NAME 0 "Enable thread name for debugging"
+add_sw_setting boolean system_h_define feature.enable_shadow_register_set TTHREAD_ENABLE_SRS 0 "Use shadow register set to store contexts"
 
 # Scheduling settings
 add_sw_setting boolean system_h_define scheduling.preemption.enabled TTHREAD_PREEMPTION_ENABLE 1 "Enable preemption based on system tick"
@@ -89,3 +92,4 @@ add_sw_setting boolean system_h_define scheduling.policy.default_fifo SCHED_POLI
 # Other settings
 add_sw_setting hex_number system_h_define others.min_stack_size PTHREAD_STACK_MIN_OVERRIDE 0x1000 "Minimum stack size for threads"
 add_sw_setting boolean system_h_define others.thread_safe_newlib TTHREAD_THREAD_SAFE_NEWLIB 1 "Require thread safe C library"
+add_sw_setting boolean system_h_define others.strict_check TTHREAD_STRICT_CHECK 0 "Enable strict integrity check"

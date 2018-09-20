@@ -55,4 +55,3 @@ extern int sched_roundrobin_np(void);
 #endif
 
 #endif  /* __SCHED_H__ */
-/* vim: set et sts=2 sw=2: */

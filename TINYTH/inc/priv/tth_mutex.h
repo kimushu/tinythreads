@@ -58,4 +58,3 @@ static inline int tth_cs_mutex_unlock(pthread_mutex_t *mutex)
 #endif
 
 #endif  /* __PRIV_TTH_MUTEX_H__ */
-/* vim: set et sts=2 sw=2: */

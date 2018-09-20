@@ -42,11 +42,9 @@ int sched_get_priority_min(int policy)
 int sched_yield(void)
 {
   int lock;
-  lock = tth_cs_begin();
+  lock = tth_arch_cs_begin();
   tth_cs_move(&tth_ready, &tth_ready, TTHREAD_WAIT_READY);
   tth_cs_switch();
-  tth_cs_end(lock);
+  tth_arch_cs_end(lock);
   return 0;
 }
-
-/* vim: set et sts=2 sw=2: */

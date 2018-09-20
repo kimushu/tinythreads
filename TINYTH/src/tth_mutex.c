@@ -36,9 +36,9 @@ int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr)
  */
 int pthread_mutex_lock(pthread_mutex_t *mutex)
 {
-  int lock = tth_cs_begin();
+  int lock = tth_arch_cs_begin();
   int result = tth_cs_mutex_lock(mutex, 1);
-  tth_cs_end(lock);
+  tth_arch_cs_end(lock);
   return result;
 }
 
@@ -48,9 +48,9 @@ int pthread_mutex_lock(pthread_mutex_t *mutex)
  */
 int pthread_mutex_trylock(pthread_mutex_t *mutex)
 {
-  int lock = tth_cs_begin();
+  int lock = tth_arch_cs_begin();
   int result = tth_cs_mutex_lock(mutex, 0);
-  tth_cs_end(lock);
+  tth_arch_cs_end(lock);
   return result;
 }
 
@@ -60,15 +60,14 @@ int pthread_mutex_trylock(pthread_mutex_t *mutex)
  */
 int pthread_mutex_unlock(pthread_mutex_t *mutex)
 {
-  int lock = tth_cs_begin();
+  int lock = tth_arch_cs_begin();
   int result = tth_cs_mutex_unlock(mutex);
   if (result == 0)
   {
     tth_cs_switch();
   }
-  tth_cs_end(lock);
+  tth_arch_cs_end(lock);
   return result;
 }
 
 #endif  /* TTHREAD_ENABLE_MUTEX */
-/* vim: set et sts=2 sw=2: */

@@ -35,7 +35,7 @@ int pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr)
  */
 int pthread_cond_broadcast(pthread_cond_t *cond)
 {
-  int lock = tth_cs_begin();
+  int lock = tth_arch_cs_begin();
 
   while (cond->__priv.waiter)
   {
@@ -43,7 +43,7 @@ int pthread_cond_broadcast(pthread_cond_t *cond)
   }
 
   tth_cs_switch();
-  tth_cs_end(lock);
+  tth_arch_cs_end(lock);
 
   return 0;
 }
@@ -54,11 +54,11 @@ int pthread_cond_broadcast(pthread_cond_t *cond)
  */
 int pthread_cond_signal(pthread_cond_t *cond)
 {
-  int lock = tth_cs_begin();
+  int lock = tth_arch_cs_begin();
 
   tth_cs_move(&cond->__priv.waiter, &tth_ready, TTHREAD_WAIT_READY);
   tth_cs_switch();
-  tth_cs_end(lock);
+  tth_arch_cs_end(lock);
 
   return 0;
 }
@@ -69,7 +69,7 @@ int pthread_cond_signal(pthread_cond_t *cond)
  */
 int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 {
-  int lock = tth_cs_begin();
+  int lock = tth_arch_cs_begin();
   int result = tth_cs_mutex_unlock(mutex);
   if (result == 0)
   {
@@ -77,9 +77,8 @@ int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
     tth_cs_switch();
     result = tth_cs_mutex_lock(mutex, 1);
   }
-  tth_cs_end(lock);
+  tth_arch_cs_end(lock);
   return result;
 }
 
 #endif  /* TTHREAD_ENABLE_COND */
-/* vim: set et sts=2 sw=2: */

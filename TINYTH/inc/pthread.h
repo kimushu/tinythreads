@@ -198,4 +198,3 @@ extern int pthread_getname_np(pthread_t thread, char *name, size_t len);
 #endif
 
 #endif  /* __PTHREAD_H__ */
-/* vim: set et sts=2 sw=2: */

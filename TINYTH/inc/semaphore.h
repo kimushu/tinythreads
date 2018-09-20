@@ -30,4 +30,3 @@ extern int sem_trywait(sem_t *sem);
 #endif
 
 #endif  /* __SEMAPHORE_H__ */
-/* vim: set et sts=2 sw=2: */

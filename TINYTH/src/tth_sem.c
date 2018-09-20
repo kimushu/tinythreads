@@ -11,7 +11,7 @@ int sem_destroy(sem_t *sem)
 {
   if (sem->__priv.waiter)
   {
-    tth_crash();
+    tth_arch_crash();
   }
 
   return 0;
@@ -57,7 +57,7 @@ int sem_getvalue(sem_t *sem, int *sval)
  */
 int sem_post(sem_t *sem)
 {
-  int lock = tth_cs_begin();
+  int lock = tth_arch_cs_begin();
   int result = 0;
 
   if (sem->__priv.waiter)
@@ -75,7 +75,7 @@ int sem_post(sem_t *sem)
     ++sem->__priv.value;
   }
 
-  tth_cs_end(lock);
+  tth_arch_cs_end(lock);
   return result;
 }
 
@@ -85,7 +85,7 @@ int sem_post(sem_t *sem)
  */
 int sem_wait(sem_t *sem)
 {
-  int lock = tth_cs_begin();
+  int lock = tth_arch_cs_begin();
 
   if (sem->__priv.value > 0)
   {
@@ -97,7 +97,7 @@ int sem_wait(sem_t *sem)
     tth_cs_switch();
   }
 
-  tth_cs_end(lock);
+  tth_arch_cs_end(lock);
   return 0;
 }
 
@@ -107,7 +107,7 @@ int sem_wait(sem_t *sem)
  */
 int sem_trywait(sem_t *sem)
 {
-  int lock = tth_cs_begin();
+  int lock = tth_arch_cs_begin();
   int result;
 
   if (sem->__priv.value > 0)
@@ -120,9 +120,8 @@ int sem_trywait(sem_t *sem)
     result = EAGAIN;
   }
 
-  tth_cs_end(lock);
+  tth_arch_cs_end(lock);
   return result;
 }
 
 #endif  /* TTHREAD_ENABLE_SEM */
-/* vim: set et sts=2 sw=2: */

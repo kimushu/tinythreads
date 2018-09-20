@@ -34,5 +34,3 @@ void __env_unlock(struct _reent *_r)
   }
 #endif  /* TTHREAD_THREAD_SAFE_NEWLIB */
 }
-
-/* vim: set et sts=2 sw=2: */

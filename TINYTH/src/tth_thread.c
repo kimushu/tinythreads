@@ -27,6 +27,9 @@ static tth_thread tth_idle_thread =
   .detachstate    = PTHREAD_CREATE_DETACHED,
   .schedpriority  = 0,
   .schedpolicy    = SCHED_FIFO,
+#ifdef TTHREAD_ARCH_THREAD_TYPE
+  .arch           = TTHREAD_ARCH_THREAD_INIT_IDLE,
+#endif
 };
 
 /*
@@ -45,6 +48,9 @@ static tth_thread tth_default_thread =
   .detachstate    = PTHREAD_CREATE_JOINABLE,
   .schedpriority  = SCHED_PRIORITY_DEFAULT,
   .schedpolicy    = SCHED_POLICY_DEFAULT,
+#ifdef TTHREAD_ARCH_THREAD_TYPE
+  .arch           = TTHREAD_ARCH_THREAD_INIT_DEFAULT,
+#endif
 };
 
 static tth_thread *tth_detach;
@@ -59,7 +65,9 @@ tth_thread *tth_ready = &tth_default_thread;
  */
 int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *), void *arg)
 {
+#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)  
   struct _reent *reent;
+#endif
   tth_thread *object;
   void *stackaddr;
   int lock;
@@ -86,22 +94,23 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
     }
   }
 
-#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)  
+#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)
   reent = ((struct _reent *)((uintptr_t)stackaddr + attr->__priv.stacksize)) - 1;
   _REENT_INIT_PTR(reent);
   object = ((tth_thread *)reent) - 1;
 #else   /* !TTHREAD_THREAD_SAFE_NEWLIB */
-  reent = NULL;
   object = ((tth_thread *)((uintptr_t)stackaddr + attr->__priv.stacksize)) - 1;
 #endif  /* !TTHREAD_THREAD_SAFE_NEWLIB */
 #if (TTHREAD_ENABLE_NAME != 0)
-  object = (tth_thread *)((uintptr_t)object - TTHREAD_NAME_MAX_LEN);
+  object = (tth_thread *)(((uintptr_t)object - TTHREAD_NAME_MAX_LEN) & ~(sizeof(void *) - 1));
   object->name = (char *)(object + 1);
   object->name[0] = '\0';
 #endif  /* TTHREAD_ENABLE_NAME */
   thread->__priv.thread = object;
 
-  // object->context will be initialized in tth_init_stack()
+#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)  
+  object->reent = reent;
+#endif  /* TTHREAD_THREAD_SAFE_NEWLIB */
   object->switches = 0;
   object->waiter = NULL;
   object->follower = NULL;
@@ -112,12 +121,23 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
   object->autostack = attr->__priv.stackaddr ? NULL : stackaddr;
   object->shared.retval = NULL;
 
-  tth_init_stack(object, object, reent, start_routine, arg);
+  object->context = tth_arch_init_stack(object, start_routine, arg);
+  if (!object->context)
+  {
+#ifdef TTHREAD_MALLOC_LOCK
+    __malloc_lock(_impure_ptr);
+#endif
+    free(object->autostack);
+#ifdef TTHREAD_MALLOC_LOCK
+    __malloc_unlock(_impure_ptr);
+#endif
+    return EAGAIN;
+  }
 
-  lock = tth_cs_begin();
+  lock = tth_arch_cs_begin();
   tth_cs_move(&object, &tth_ready, TTHREAD_WAIT_READY);
   tth_cs_switch();
-  tth_cs_end(lock);
+  tth_arch_cs_end(lock);
 
   return 0;
 }
@@ -130,10 +150,11 @@ void pthread_exit(void *retval)
 {
   tth_thread *target = tth_running;
 
-  tth_cs_begin();
+  tth_arch_cs_begin();
 
   target->shared.retval = retval;
   target->context = NULL;
+  tth_arch_cs_cleanup(target);
 
   if (target->detachstate == PTHREAD_CREATE_JOINABLE)
   {
@@ -159,7 +180,7 @@ int pthread_join(pthread_t thread, void **retval)
   int result = 0;
   int lock;
 
-  lock = tth_cs_begin();
+  lock = tth_arch_cs_begin();
 
   if ((target->detachstate != PTHREAD_CREATE_JOINABLE) || (target->waiter))
   {
@@ -183,7 +204,7 @@ int pthread_join(pthread_t thread, void **retval)
       *retval = target->shared.retval;
     }
 
-    tth_cs_end(lock);
+    tth_arch_cs_end(lock);
 #ifdef TTHREAD_MALLOC_LOCK
     __malloc_lock(_impure_ptr);
 #endif
@@ -194,7 +215,7 @@ int pthread_join(pthread_t thread, void **retval)
     return 0;
   }
 
-  tth_cs_end(lock);
+  tth_arch_cs_end(lock);
   return result;
 }
 
@@ -208,7 +229,7 @@ int pthread_detach(pthread_t thread)
   int result = 0;
   int lock;
 
-  lock = tth_cs_begin();
+  lock = tth_arch_cs_begin();
 
   if (target->detachstate != PTHREAD_CREATE_JOINABLE)
   {
@@ -216,14 +237,14 @@ int pthread_detach(pthread_t thread)
   }
   else if (target->waiter)
   {
-    tth_crash();
+    tth_arch_crash();
   }
   else
   {
     target->detachstate = PTHREAD_CREATE_DETACHED;
   }
 
-  tth_cs_end(lock);
+  tth_arch_cs_end(lock);
   return result;
 }
 
@@ -288,6 +309,13 @@ int pthread_getname_np(pthread_t thread, char *name, size_t len)
 }
 
 /*
+ * Idle thread handler
+ */
+__attribute__((weak)) void tth_idle_handler(void)
+{
+}
+
+/*
  * Idle thread
  */
 static void *tth_idle(void *arg)
@@ -301,10 +329,10 @@ static void *tth_idle(void *arg)
   {
     if (tth_detach)
     {
-      lock = tth_cs_begin();
+      lock = tth_arch_cs_begin();
       stack = tth_detach->autostack;
       tth_detach = tth_detach->follower;
-      tth_cs_end(lock);
+      tth_arch_cs_end(lock);
 
 #ifdef TTHREAD_MALLOC_LOCK
       __malloc_lock(_impure_ptr);
@@ -314,6 +342,8 @@ static void *tth_idle(void *arg)
       __malloc_unlock(_impure_ptr);
 #endif
     }
+
+    tth_idle_handler();
 
     sched_yield();
   }
@@ -327,48 +357,33 @@ static void *tth_idle(void *arg)
  */
 void tth_initialize(void)
 {
-  void *stack;
+#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)
+  struct _reent *reent;
+#endif
+  void *idle_stack;
+  void *stack_bottom;
 
   tth_running = NULL;
-  stack = malloc(PTHREAD_STACK_MIN);
-  if (!stack)
+  idle_stack = malloc(PTHREAD_STACK_MIN);
+  if (!idle_stack)
   {
-    tth_crash();
+    tth_arch_crash();
   }
-  tth_init_stack(&tth_idle_thread, (char *)stack + PTHREAD_STACK_MIN, NULL, tth_idle, NULL);
+  stack_bottom = (char *)idle_stack + PTHREAD_STACK_MIN;
+
+#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)
+  reent = ((struct _reent *)stack_bottom) - 1;
+  _REENT_INIT_PTR(reent);
+  tth_idle_thread.reent = reent;
+  stack_bottom = reent;
+#endif
+  tth_idle_thread.context = tth_arch_init_stack(stack_bottom, tth_idle, NULL);
+  if (!tth_idle_thread.context)
+  {
+    tth_arch_crash();
+  }
   tth_running = &tth_default_thread;
-}
-
-/*
- * Interrupt enter hook routine
- */
-void tth_int_enter(void)
-{
-  ++tth_int_level;
-
-  if (tth_int_level <= 0)
-  {
-    tth_crash();
-  }
-}
-
-/*
- * Interrupt exit hook routine
- */
-void tth_int_exit(void)
-{
-  if (tth_int_level == 0)
-  {
-    tth_crash();
-  }
-
-  if (--tth_int_level == 0)
-  {
-    if (tth_running != tth_ready)
-    {
-      tth_int_context_switch();
-    }
-  }
+  tth_arch_initialize();
 }
 
 /*
@@ -396,5 +411,3 @@ void tth_int_tick(void)
   }
 #endif  /* TTHREAD_PREEMPTION_ENABLE */
 }
-
-/* vim: set et sts=2 sw=2: */

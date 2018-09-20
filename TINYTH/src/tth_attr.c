@@ -172,5 +172,3 @@ int pthread_attr_getstacksize(pthread_attr_t *attr, size_t *stacksize)
   *stacksize = attr->__priv.stacksize;
   return 0;
 }
-
-/* vim: set et sts=2 sw=2: */

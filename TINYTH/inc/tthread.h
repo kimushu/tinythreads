@@ -10,4 +10,3 @@ extern unsigned int sleep(unsigned int seconds);
 extern int usleep(unsigned long us);
 
 #endif  /* __TTHREAD_H__ */
-/* vim: set et sts=2 sw=2: */

@@ -35,4 +35,3 @@ int pthread_once(pthread_once_t *once_control, void (*init_routine)(void))
 }
 
 #endif  /* TTHREAD_ENABLE_ONCE */
-/* vim: set et sts=2 sw=2: */

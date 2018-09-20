@@ -12,12 +12,12 @@
 # define TTHREAD_MALLOC_LOCK 1
 #endif
 
-#if defined(ALT_EXCEPTION_STACK)
-# error "TinyThreads does not support separate exception stack. Turn off 'hal.linker.enable_exception_stack'"
-#endif
-
-#if defined(ALT_INTERRUPT_STACK)
-# error "TinyThreads does not support separate interrupt stack. Turn off 'hal.linker.enable_interrupt_stack'"
+#if (TTHREAD_ENABLE_SRS != 0)
+# define TTHREAD_ARCH_THREAD_TYPE           struct { int srs; }
+# define TTHREAD_ARCH_THREAD_INIT_DEFAULT   { .srs = 1, }
+# define TTHREAD_ARCH_THREAD_INIT_IDLE      { .srs = 0, }
+#else
+# undef TTHREAD_ARCH_THREAD_TYPE
 #endif
 
 #ifdef __cplusplus
@@ -25,25 +25,27 @@ extern "C" {
 #endif
 
 /* Prototype for inline functions */
-static inline void tth_crash(void) __attribute__((always_inline));
-static inline int tth_cs_begin(void) __attribute__((always_inline));
-static inline void tth_cs_end(int status) __attribute__((always_inline));
-static inline void tth_cs_exec_switch(void) __attribute__((always_inline));
+static inline void tth_arch_crash(void) __attribute__((always_inline));
+static inline int  tth_arch_cs_begin(void) __attribute__((always_inline));
+static inline void tth_arch_cs_end(int status) __attribute__((always_inline));
+static inline void tth_arch_cs_exec_switch(void) __attribute__((always_inline));
 
 /* Crash system */
-static inline void tth_crash(void)
+static inline void tth_arch_crash(void)
 {
   __builtin_wrctl(0, 0);
   for (;;)
   {
+#ifdef NIOS2_HAS_DEBUG_STUB
     __asm__("break");
+#endif
   }
 }
 
 /*
  * Begin critical section
  */
-static inline int tth_cs_begin(void)
+static inline int tth_arch_cs_begin(void)
 {
   int status;
   status = __builtin_rdctl(0); /* status */
@@ -54,7 +56,7 @@ static inline int tth_cs_begin(void)
 /*
  * End critical section
  */
-static inline void tth_cs_end(int status)
+static inline void tth_arch_cs_end(int status)
 {
   __builtin_wrctl(0, status);
 }
@@ -62,7 +64,7 @@ static inline void tth_cs_end(int status)
 /*
  * Execute thread switching
  */
-static inline void tth_cs_exec_switch(void)
+static inline void tth_arch_cs_exec_switch(void)
 {
   /*
    * Issue "trap <imm5>" instruction
@@ -76,4 +78,3 @@ static inline void tth_cs_exec_switch(void)
 #endif
 
 #endif  /* __PRIV_TTH_ARCH_NIOS2_H__ */
-/* vim: set et sts=2 sw=2: */
