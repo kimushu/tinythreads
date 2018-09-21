@@ -71,19 +71,29 @@ add_sw_property systemh_generation_script tinythreads_sw_systemh_generation.tcl
 
 # Feature enable/disable
 add_sw_setting boolean system_h_define feature.enable_cond TTHREAD_ENABLE_COND 1 "Enable pthread_cond*() APIs"
+set_sw_setting_property feature.enable_cond group common
 add_sw_setting boolean system_h_define feature.enable_mutex TTHREAD_ENABLE_MUTEX 1 "Enable pthread_mutex*() APIs"
+set_sw_setting_property feature.enable_mutex group common
 add_sw_setting boolean system_h_define feature.enable_sem TTHREAD_ENABLE_SEM 1 "Enable sem_*() APIs"
+set_sw_setting_property feature.enable_sem group common
 add_sw_setting boolean system_h_define feature.enable_once TTHREAD_ENABLE_ONCE 1 "Enable pthread_once*() APIs"
+set_sw_setting_property feature.enable_once group common
 add_sw_setting boolean system_h_define feature.enable_rwlock TTHREAD_ENABLE_RWLOCK 1 "Enable pthread_rwlock*() APIs"
+set_sw_setting_property feature.enable_rwlock group common
 add_sw_setting boolean system_h_define feature.enable_spin TTHREAD_ENABLE_SPIN 1 "Enable pthread_spin*() APIs"
+set_sw_setting_property feature.enable_spin group common
 add_sw_setting boolean system_h_define feature.enable_sleep TTHREAD_ENABLE_SLEEP 1 "Enable sleep()/usleep() APIs"
+set_sw_setting_property feature.enable_sleep group common
 add_sw_setting boolean system_h_define feature.enable_profile TTHREAD_ENABLE_PROF 0 "Enable internal profiling (Switch counter)"
+set_sw_setting_property feature.enable_profile group common
 add_sw_setting boolean system_h_define feature.enable_name TTHREAD_ENABLE_NAME 0 "Enable thread name for debugging"
-add_sw_setting boolean system_h_define feature.enable_shadow_register_set TTHREAD_ENABLE_SRS 0 "Use shadow register set to store contexts"
+set_sw_setting_property feature.enable_name group common
 
 # Scheduling settings
 add_sw_setting boolean system_h_define scheduling.preemption.enabled TTHREAD_PREEMPTION_ENABLE 1 "Enable preemption based on system tick"
+set_sw_setting_property scheduling.preemption.enabled group common
 add_sw_setting decimal_number system_h_define scheduling.preemption.interval TTHREAD_PREEMPTION_INTERVAL 10 "Interval of preemption (in milliseconds)"
+set_sw_setting_property scheduling.preemption.interval group common
 add_sw_setting decimal_number system_h_define scheduling.priority.max SCHED_PRIORITY_MAX 99 "Maximum priority value (1~255)"
 add_sw_setting decimal_number system_h_define scheduling.priority.min SCHED_PRIORITY_MIN 1 "Minimum priority value (1~255)"
 add_sw_setting decimal_number system_h_define scheduling.priority.default SCHED_PRIORITY_DEFAULT 10 "Default priority value"
@@ -93,3 +103,4 @@ add_sw_setting boolean system_h_define scheduling.policy.default_fifo SCHED_POLI
 add_sw_setting hex_number system_h_define others.min_stack_size PTHREAD_STACK_MIN_OVERRIDE 0x1000 "Minimum stack size for threads"
 add_sw_setting boolean system_h_define others.thread_safe_newlib TTHREAD_THREAD_SAFE_NEWLIB 1 "Require thread safe C library"
 add_sw_setting boolean system_h_define others.strict_check TTHREAD_STRICT_CHECK 0 "Enable strict integrity check"
+add_sw_setting boolean system_h_define others.use_shadow_register_set TTHREAD_ENABLE_SRS 0 "Use shadow register set to store contexts"

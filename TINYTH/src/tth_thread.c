@@ -121,7 +121,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
   object->autostack = attr->__priv.stackaddr ? NULL : stackaddr;
   object->shared.retval = NULL;
 
-  object->context = tth_arch_init_stack(object, start_routine, arg);
+  object->context = tth_arch_init_stack(object, object, start_routine, arg);
   if (!object->context)
   {
 #ifdef TTHREAD_MALLOC_LOCK
@@ -377,7 +377,7 @@ void tth_initialize(void)
   tth_idle_thread.reent = reent;
   stack_bottom = reent;
 #endif
-  tth_idle_thread.context = tth_arch_init_stack(stack_bottom, tth_idle, NULL);
+  tth_idle_thread.context = tth_arch_init_stack(&tth_idle_thread, stack_bottom, tth_idle, NULL);
   if (!tth_idle_thread.context)
   {
     tth_arch_crash();

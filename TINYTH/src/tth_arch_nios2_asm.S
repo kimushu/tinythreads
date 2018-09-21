@@ -39,7 +39,7 @@ alt_exception:
     /* .exceptions.entry.entry.ecc_fatal */
 
     .section .exceptions.entry, "xa"
-#if defined(TTHREAD_USE_SRS) && defined(TTHREAD_STRICT_CHECK)
+#if defined(TTHREAD_USE_SRS) && (TTHREAD_STRICT_CHECK)
     rdctl   et, status
     andi    et, et, %lo(0x0000fc00) /* CRS mask */
     bne     et, zero, .Lcrash
@@ -58,9 +58,9 @@ alt_exception:
     andhi   et, et, %hi(0x003f0000) /* PRS mask */
     beq     et, zero, .Lcrash
 # endif
+    rdprs   sp, sp, 8
     rdctl   r5, estatus
     subi    r1, ea, 4
-    subi    sp, sp, 8
     mov     et, zero    /* Restore et */
     br      .Lsmall_save
 .Lnested_entry:
@@ -68,6 +68,11 @@ alt_exception:
     subi    sp, sp, 72
     stw     ra,   8(sp)
     stw     r1,  12(sp)
+#if (TTHREAD_STRICT_CHECK)
+    rdctl   r1, status
+    andhi   r1, r1, %hi(0x003f0000) /* PRS mask */
+    bne     r1, zero, .Lcrash
+#endif
     stw     r2,  16(sp)
     stw     r3,  20(sp)
     stw     r4,  24(sp)
@@ -160,7 +165,7 @@ alt_exception:
 
 #ifdef ALT_INCLUDE_INSTRUCTION_RELATED_EXCEPTION_API
     /* Load exception-causing address as the first argument (r4) */
-    addi    r4, ea, -4
+    subi    r4, ea, 4
 
     /* Call the instruction-exception entry */
     call    alt_instruction_exception_entry
@@ -169,7 +174,7 @@ alt_exception:
     bne     r2, zero, .Lexception_exit
 
     /* Otherwise, modify saved ea to re-issue the instruction */
-    addi    r2, ea, -4
+    subi    r2, ea, 4
 #ifdef TTHREAD_USE_SRS
     stw     r2,  4(sp)
 #else   /* !TTHREAD_USE_SRS */
@@ -339,6 +344,7 @@ tth_arch_initialize:
     rdctl   r1, status
     orhi    r2, r1, %hi(0x00010000) /* PRS = 1 */
     ori     r1, r1, %lo(0x00000400) /* CRS = 1 */
+    subi    r3, zero, 1
     wrctl   status, r2
     wrctl   estatus, r1
     wrprs   zero, zero
@@ -350,10 +356,13 @@ tth_arch_initialize:
     wrprs   r21, r21
     wrprs   r22, r22
     wrprs   r23, r23
+    wrprs   et, zero
+    wrprs   bt, r3
     wrprs   gp, gp
     wrprs   sp, sp
     wrprs   fp, fp
     wrprs   ea, zero
+    wrprs   sstatus, r3
     wrprs   ra, ra
     nextpc  ea
     addi    ea, ea, 8
@@ -365,28 +374,30 @@ tth_arch_initialize:
     .globl tth_arch_init_stack
     .type  tth_arch_init_stack, @function
 tth_arch_init_stack:
-    /* r4: stack_bottom */
-    /* r5: start_routine */
-    /* r6: arg */
+    /* r4: thread */
+    /* r5: stack_bottom */
+    /* r6: start_routine */
+    /* r7: arg */
 
 #ifdef TTHREAD_USE_SRS
     /* Allocate free shadow register set */
     subi    sp, sp, 16
-    stw     r4,  0(sp)
-    stw     r5,  4(sp)
-    stw     r6,  8(sp)
+    /* r4 is not saved because it is not used after */
+    stw     r5,  0(sp)
+    stw     r6,  4(sp)
+    stw     r7,  8(sp)
     stw     ra, 12(sp)
     call    tth_nios2_alloc_srs
-    ldw     r4,  0(sp)
-    ldw     r5,  4(sp)
-    ldw     r6,  8(sp)
+    ldw     r5,  0(sp)
+    ldw     r6,  4(sp)
+    ldw     r7,  8(sp)
     ldw     ra, 12(sp)
     addi    sp, sp, 16
     beq     r2, zero, 1f
 
     /* Set status.PRS */
-    rdctl   r7, status
-    orhi    r3, r7, %hi(0x003f0000) /* PRS mask */
+    rdctl   r4, status  /* Original status value */
+    orhi    r3, r4, %hi(0x003f0000) /* PRS mask */
     xorhi   r3, r3, %hi(0x003f0000) /* PRS mask */
     slli    r1, r2, 16
     or      r1, r3, r1
@@ -399,18 +410,19 @@ tth_arch_init_stack:
     or      r1, r3, r1
 
     /* Construct initial stack */
-    subi    r2, r4, 8
+    subi    r2, r5, 8   /* stack_bottom - 8 */
     stw     r1, 0(r2)   /* estatus */
-    stw     r5, 4(r2)   /* start_routine */
+    stw     r6, 4(r2)   /* start_routine */
 
     /* Initialize registers */
     movhi   r1, 0xdead
     ori     r1, r1, 0xbeef
+    subi    r3, zero, 1
     wrprs   zero, zero
     wrprs   r1, r1
     wrprs   r2, r1
     wrprs   r3, r1
-    wrprs   r4, r6  /* arg */
+    wrprs   r4, r7  /* arg */
     wrprs   r5, r1
     wrprs   r6, r1
     wrprs   r7, r1
@@ -431,24 +443,25 @@ tth_arch_init_stack:
     wrprs   r22, r1
     wrprs   r23, r1
     wrprs   et, zero
-    wrprs   bt, zero
+    wrprs   bt, r3
+    wrprs   sp, r2
     wrprs   fp, r1
     wrprs   ea, zero
-    wrprs   sstatus, zero
+    wrprs   sstatus, r3
     movhi   r1, %hi(tth_arch_exit_guard)
     ori     r1, r1, %lo(tth_arch_exit_guard)
     wrprs   ra, r1
 
     /* Restore status.PRS */
-    wrctl   status, r7
+    wrctl   status, r4
 1:
     ret
 #else   /* !TTHREAD_USE_SRS */
     /* Read status */
-    rdctl   r7, status
+    rdctl   r4, status
 
     /* Construct initial stack */
-    subi    r2, r4, 112
+    subi    r2, r5, 112 /* stack_bottom - 112 */
     movhi   r1, 0xdead
     ori     r1, r1, 0xbeef
     movhi   r3, %hi(tth_arch_exit_guard)
@@ -467,7 +480,7 @@ tth_arch_init_stack:
     stw     r1,  44(r2) /* r1 */
     stw     r1,  48(r2) /* r2 */
     stw     r1,  52(r2) /* r3 */
-    stw     r6,  56(r2) /* r4 = arg */
+    stw     r7,  56(r2) /* r4 = arg */
     stw     r1,  60(r2) /* r5 */
     stw     r1,  64(r2) /* r6 */
     stw     r1,  68(r2) /* r7 */
@@ -479,14 +492,14 @@ tth_arch_init_stack:
     stw     r1,  92(r2) /* r13 */
     stw     r1,  96(r2) /* r14 */
     stw     r1, 100(r2) /* r15 */
-    stw     r7, 104(r2) /* estatus */
-    stw     r5, 108(r2) /* ea-4 = start_routine */
+    stw     r4, 104(r2) /* estatus */
+    stw     r6, 108(r2) /* ea-4 = start_routine */
     ret
 #endif  /* !TTHREAD_USE_SRS */
 
-    .globl tth_thread_container
-    .type  tth_thread_container, @function
-tth_thread_container:
+    .globl tth_thread_entry
+    .type  tth_thread_entry, @function
+tth_thread_entry:
     /*
      * This function will be shown as a caller of each thread
      * except for default thread.

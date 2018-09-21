@@ -23,7 +23,7 @@ int tth_nios2_switch;
 /*
  * Allocate free shadow register set
  */
-int tth_nios2_alloc_srs(void)
+int tth_nios2_alloc_srs(tth_thread *thread)
 {
   int lock = tth_arch_cs_begin();
   regset_t bits = ~tth_nios2_srs;
@@ -60,6 +60,7 @@ int tth_nios2_alloc_srs(void)
   }
 
   tth_arch_cs_end(lock);
+  thread->arch.srs = srs;
   return srs;
 }
 #endif  /* TTHREAD_ENABLE_SRS */

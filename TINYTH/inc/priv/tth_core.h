@@ -64,7 +64,7 @@ extern tth_thread *tth_ready;
 
 /* Architecture dependent functions */
 extern void tth_arch_initialize(void);
-extern void *tth_arch_init_stack(void *stack_bottom, void *(*start_routine)(void *), void *arg);
+extern void *tth_arch_init_stack(tth_thread *thread, void *stack_bottom, void *(*start_routine)(void *), void *arg);
 extern int  tth_arch_cs_begin(void);
 extern void tth_arch_cs_end(int lock);
 extern void tth_arch_cs_exec_switch(void);
