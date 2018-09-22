@@ -383,6 +383,9 @@ void tth_initialize(void)
     tth_arch_crash();
   }
   tth_running = &tth_default_thread;
+#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)
+  tth_running->reent = _impure_ptr;
+#endif
   tth_arch_initialize();
 }
 
