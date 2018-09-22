@@ -1,6 +1,8 @@
 #include <priv/tth_core.h>
 #include <errno.h>
-#include <reent.h>
+#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)
+# include <reent.h>
+#endif
 #include <malloc.h>
 #include <string.h>
 
@@ -111,7 +113,9 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
 #if (TTHREAD_THREAD_SAFE_NEWLIB != 0)  
   object->reent = reent;
 #endif  /* TTHREAD_THREAD_SAFE_NEWLIB */
+#if (TTHREAD_ENABLE_PROF != 0)
   object->switches = 0;
+#endif  /* TTHREAD_ENABLE_PROF */
   object->waiter = NULL;
   object->follower = NULL;
   object->detachstate = attr->__priv.detachstate;
