@@ -1,0 +1,293 @@
+config USE_3RDPARTY_TINYTHREADS
+    bool "Use TinyThreads?"
+    default n
+    depends on !USE_3RDPARTY_RTOS
+
+config USE_3RDPARTY_TINYTHREADS_DISABLED
+    bool "Use TinyThreads?"
+    default n
+    depends on USE_3RDPARTY_RTOS
+    persistent
+
+ifblock USE_3RDPARTY_TINYTHREADS
+    menu "TinyThreads Configuration"
+        ---help---
+        <p><strong>TinyThreads</strong></p>
+        <div>&nbsp;</div>
+        <p>Refer to https://github.com/kimushu/tinythreads</p>
+        ---endhelp---
+
+        comment "TinyThreads - version 1.2"
+
+        menu "Features"
+            ---help---
+            <div><strong>TinyThreads - Features</strong></div>
+            <div>&nbsp;</div>
+            <div>Enable or disable pthread features from the build.</div>
+            ---endhelp---
+
+            config TTHREAD_ENABLE_COND
+                bool "Enable pthread_cond*() APIs"
+                default y
+                ---help---
+                <div><strong>TinyThreads - Enable pthread_cond*() APIs</strong></div>
+                <div>&nbsp;</div>
+                <div>Enable APIs for condition variable.</div>
+                ---endhelp---
+
+            config TTHREAD_ENABLE_MUTEX
+                bool "Enable pthread_mutex*() APIs"
+                default y
+                ---help---
+                <div><strong>TinyThreads - Enable pthread_mutex*() APIs</strong></div>
+                <div>&nbsp;</div>
+                <div>Enable APIs for mutex.</div>
+                ---endhelp---
+
+            config TTHREAD_ENABLE_SEM
+                bool "Enable sem_*() APIs"
+                default y
+                ---help---
+                <div><strong>TinyThreads - Enable sem_*() APIs</strong></div>
+                <div>&nbsp;</div>
+                <div>Enable APIs for semaphore.</div>
+                ---endhelp---
+
+            config TTHREAD_ENABLE_ONCE
+                bool "Enable pthread_once*() APIs"
+                default y
+                ---help---
+                <div><strong>TinyThreads - Enable pthread_once*() APIs</strong></div>
+                <div>&nbsp;</div>
+                <div>Enable APIs for once control.</div>
+                ---endhelp---
+
+            config TTHREAD_ENABLE_RWLOCK
+                bool "Enable pthread_rwlock*() APIs"
+                default y
+                ---help---
+                <div><strong>TinyThreads - Enable pthread_rwlock*() APIs</strong></div>
+                <div>&nbsp;</div>
+                <div>Enable APIs for read-write lock.</div>
+                ---endhelp---
+
+            config TTHREAD_ENABLE_SPIN
+                bool "Enable pthread_spin*() APIs"
+                default y
+                ---help---
+                <div><strong>TinyThreads - Enable pthread_spin*() APIs</strong></div>
+                <div>&nbsp;</div>
+                <div>Enable APIs for spin lock.</div>
+                ---endhelp---
+
+            config TTHREAD_ENABLE_SLEEP
+                bool "Enable sleep() and usleep() APIs"
+                default y
+                ---help---
+                <div><strong>TinyThreads - Enable sleep() and usleep() APIs</strong></div>
+                <div>&nbsp;</div>
+                <div>Enable sleep APIs.</div>
+                ---endhelp---
+
+            config TTHREAD_ENABLE_PROF
+                bool "Enable internal profiling (Switch counter)"
+                default n
+                ---help---
+                <div><strong>TinyThreads - Enable internal profiling (Switch counter)</strong></div>
+                <div>&nbsp;</div>
+                <div>Enable profiling for debugging.</div>
+                ---endhelp---
+
+            config TTHREAD_ENABLE_NAME
+                bool "Enable thread name for debugging"
+                default n
+                ---help---
+                <div><strong>TinyThreads - Enable thread name for debugging</strong></div>
+                <div>&nbsp;</div>
+                <div>Enable pthread_getname() and pthread_setname() APIs.</div>
+                ---endhelp---
+
+        endmenu
+
+        menu "Scheduling"
+            ---help---
+            <div><strong>TinyThreads - Scheduling</strong></div>
+            <div>&nbsp;</div>
+            <div>Configure settings about scheduling.</div>
+            ---endhelp---
+
+            config TTHREAD_PREEMPTION_ENABLE
+                bool "Enable preemption based on system tick"
+                default y
+                ---help---
+                <div><strong>TinyThreads - Enable preemption based on system tick</strong></div>
+                <div>&nbsp;</div>
+                <div>Enable preemptive scheduling.</div>
+                ---endhelp---
+
+            config TTHREAD_PREEMPTION_INTERVAL
+                int "Interval of preemption (in milliseconds)"
+                default 10
+                range 1 999999999
+                depends on TTHREAD_PREEMPTION_ENABLE
+                ---help---
+                <div><strong>TinyThreads - Interval of preemption (in milliseconds)</strong></div>
+                <div>&nbsp;</div>
+                <div>Set interval of preemption. This will be the longest duration for round-robin threads.</div>
+                ---endhelp---
+
+        endmenu
+
+        menu "Timer"
+            depends on TTHREAD_ENABLE_SLEEP || TTHREAD_PREEMPTION_ENABLE
+            ---help---
+            <div><strong>TinyThreads - Timer</strong></div>
+            <div>&nbsp;</div>
+            <div>Configure timer resource.</div>
+            ---endhelp---
+
+            config TTHREAD_TIMER_ID
+                string "Timer Module ID"
+                range TMR_MODULE_ID
+                persistent
+                default "TMR_ID_1"
+                ---help---
+                <div><strong>TinyThreads - Timer Module ID</strong></div>
+                <div>&nbsp;</div>
+                <div>Set ID of timer module that used for sleep and preemption.</div>
+                ---endhelp---
+
+            config TTHREAD_CPU_CLOCK_HZ
+                string "CPU Clock Speed (Hz)"
+                default SYS_CLK_FREQ if USE_SYS_CLK
+                default "40000000" if !USE_SYS_CLK
+                persistent if USE_SYS_CLK
+
+            config TTHREAD_PERIPHERAL_CLOCK_HZ
+                string "Peripheral Clock Speed (Hz)"
+                default SYS_CLK_PBCLK2_FREQ if USE_SYS_CLK && PIC32MZ
+                default "40000000" if !USE_SYS_CLK
+                persistent if USE_SYS_CLK
+
+            config TTHREAD_TIMER_RESOLUTION_US
+                int "Timer Resolution (in microseconds)"
+                default 1000
+                range 50 999999999
+
+        endmenu
+
+        menu "Advanced"
+            ---help---
+            <div><strong>TinyThreads - Advanced</strong></div>
+            <div>&nbsp;</div>
+            <div>Advanced settings.</div>
+            ---endhelp---
+
+            config TTHREAD_SCHED_PRIORITY_MAX
+                int "Maximum priority value"
+                default 99
+                range 1 255
+                ---help---
+                <div><strong>TinyThreads - Maximum priority value</strong></div>
+                <div>&nbsp;</div>
+                <div>The maximum value of priority. Smaller value has higher priority.</div>
+                ---endhelp---
+
+            config TTHREAD_SCHED_PRIORITY_MIN
+                int "Minimum priority value"
+                default 1
+                range 1 255
+                ---help---
+                <div><strong>TinyThreads - Minumum priority value</strong></div>
+                <div>&nbsp;</div>
+                <div>The minumum value of priority. Smaller value has higher priority.</div>
+                ---endhelp---
+
+            config TTHREAD_SCHED_PRIORITY_DEFAULT
+                int "Default priority value"
+                default 10
+                ---help---
+                <div><strong>TinyThreads - Default priority value</strong></div>
+                <div>&nbsp;</div>
+                <div>The default value of priority. Smaller value has higher priority.</div>
+                ---endhelp---
+
+            choice TTHREAD_SCHED_POLICY_DEFAULT
+                prompt "Default scheduling policy"
+                default TTHREAD_SCHED_POLICY_DEFAULT_RR
+                ---help---
+                <div><strong>TinyThreads - Default scheduling policy</strong></div>
+                <div>&nbsp;</div>
+                <div>Select default scheduling policy.</div>
+                ---endhelp---
+
+                config TTHREAD_SCHED_POLICY_DEFAULT_RR
+                    bool "Round-robin policy (SCHED_RR)"
+                    ---help---
+                    <div><strong>TinyThreads - Round-robin policy (SCHED_RR)</strong></div>
+                    <div>&nbsp;</div>
+                    <div>Use round-robin policy by default.</div>
+                    ---endhelp---
+
+                config TTHREAD_SCHED_POLICY_DEFAULT_FF
+                    bool "FIFO policy (SCHED_FF)"
+                    ---help---
+                    <div><strong>TinyThreads - FIFO policy (SCHED_FF)</strong></div>
+                    <div>&nbsp;</div>
+                    <div>Use FIFO policy by default.</div>
+                    ---endhelp---
+
+            endchoice
+
+            config TTHREAD_STACK_MIN
+                int "Minimum stack size for threads"
+                default 1024
+                range 256 999999999
+                ---help---
+                <div><strong>TinyThreads - Minimum stack size for threads</strong></div>
+                <div>&nbsp;</div>
+                <div>The minimum size for threads in bytes.</div>
+                ---endhelp---
+
+            # TTHREAD_THREAD_SAFE_NEWLIB 1 "Require thread safe C library"
+            # TTHREAD_STRICT_CHECK 0 "Enable strict integrity check"
+            # TTHREAD_ENABLE_SRS 0 "Use shadow register set to store contexts"
+
+        endmenu
+    endmenu
+
+    template TTHREAD_CONFIG_H "$HARMONY_VERSION_PATH/third_party/tinythreads/templates/tth_config.h.ftl" to "$PROJECT_HEADER_FILES/app/system_config/$CONFIGURATION/tth_config.h"
+
+    file TTHREAD_TTH_ATTR_C "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/src/tth_attr.c" to "$PROJECT_SOURCE_FILES/TINYTH/src/tth_attr.c"
+    file TTHREAD_TTH_COND_C "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/src/tth_cond.c" to "$PROJECT_SOURCE_FILES/TINYTH/src/tth_cond.c"
+    file TTHREAD_TTH_MUTEX_C "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/src/tth_mutex.c" to "$PROJECT_SOURCE_FILES/TINYTH/src/tth_mutex.c"
+    file TTHREAD_TTH_ONCE_C "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/src/tth_once.c" to "$PROJECT_SOURCE_FILES/TINYTH/src/tth_once.c"
+    file TTHREAD_TTH_SCHED_C "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/src/tth_sched.c" to "$PROJECT_SOURCE_FILES/TINYTH/src/tth_sched.c"
+    file TTHREAD_TTH_SEM_C "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/src/tth_sem.c" to "$PROJECT_SOURCE_FILES/TINYTH/src/tth_sem.c"
+    file TTHREAD_TTH_SLEEP_C "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/src/tth_sleep.c" to "$PROJECT_SOURCE_FILES/TINYTH/src/tth_sleep.c"
+    file TTHREAD_TTH_THREAD_C "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/src/tth_thread.c" to "$PROJECT_SOURCE_FILES/TINYTH/src/tth_thread.c"
+
+    file TTHREAD_PRIV_TTH_CORE_H "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc/priv/tth_core.h" to "$PROJECT_HEADER_FILES/TINYTH/inc/priv/tth_core.h"
+    file TTHREAD_PRIV_TTH_MUTEX_H "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc/priv/tth_mutex.h" to "$PROJECT_HEADER_FILES/TINYTH/inc/priv/tth_mutex.h"
+    file TTHREAD_PTHREAD_H "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc/pthread.h" to "$PROJECT_HEADER_FILES/TINYTH/inc/pthread.h"
+    file TTHREAD_SCHED_H "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc/sched.h" to "$PROJECT_HEADER_FILES/TINYTH/inc/sched.h"
+    file TTHREAD_SEMAPHORE_H "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc/semaphore.h" to "$PROJECT_HEADER_FILES/TINYTH/inc/semaphore.h"
+    file TTHREAD_TTHREAD_H "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc/tthread.h" to "$PROJECT_HEADER_FILES/TINYTH/inc/tthread.h"
+
+    ifblock PIC32MZ
+        file TTHREAD_TTH_ARCH_PIC32MZ_C "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/src/tth_arch_pic32mz.c" to "$PROJECT_SOURCE_FILES/TINYTH/src/tth_arch_pic32mz.c"
+        file TTHREAD_TTH_ARCH_PIC32MZ_ASM_S "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/src/tth_arch_pic32mz_asm.S" to "$PROJECT_SOURCE_FILES/TINYTH/src/tth_arch_pic32mz_asm.S"
+        file TTHREAD_PRIV_TTH_ARCH_PIC32MZ_H "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc/priv/tth_arch_pic32mz.h" to "$PROJECT_HEADER_FILES/TINYTH/inc/priv/tth_arch_pic32mz.h"
+    endif
+
+    ifblock PROJECT_STANDALONE = n
+        compiler TTHREAD_COMPILER_INCLUDEPATH_1 includepath "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc"
+        assembler TTHREAD_ASSEMBLER_INCLUDEPATH_1 includepath "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc"
+    endif
+
+    ifblock PROJECT_STANDALONE = y
+        compiler TTHREAD_COMPILER_INCLUDEPATH_1_SA includepath "$PROJECT_HEADER_FILES/TINYTH/inc"
+        assembler TTHREAD_ASSEMBLER_INCLUDEPATH_1_SA includepath "$PROJECT_HEADER_FILES/TINYTH/inc"
+    endif
+
+endif

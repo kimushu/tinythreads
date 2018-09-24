@@ -2,9 +2,11 @@
 #define __PRIV_TTH_CORE_H__
 
 #if defined(__NIOS2__)
-#include <priv/tth_arch_nios2.h>
+# include <priv/tth_arch_nios2.h>
+#elif defined(__PIC32MZ__)
+# include <priv/tth_arch_pic32mz.h>
 #else
-#error "Unsupported architecture"
+# error "Unsupported architecture"
 #endif
 
 #include <stddef.h>
