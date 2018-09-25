@@ -32,9 +32,14 @@ _general_exception_context:
     eret
 #endif  /* TTHREAD_ENABLE_SRS */
 
+/*
     .globl _general_exception_vector
 _general_exception_vector:
     eret
     nop
+*/
+    .globl tth_pic32mz_isr_epilogue
+tth_pic32mz_isr_epilogue:
+    eret
 
 #endif  /* __PIC32MZ__ */

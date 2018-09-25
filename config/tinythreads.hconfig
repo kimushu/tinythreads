@@ -1,6 +1,8 @@
 config USE_3RDPARTY_TINYTHREADS
     bool "Use TinyThreads?"
     default n
+    set USE_OSAL to n
+    set OSAL_RTOS to 20
     depends on !USE_3RDPARTY_RTOS
 
 config USE_3RDPARTY_TINYTHREADS_DISABLED
@@ -267,6 +269,9 @@ ifblock USE_3RDPARTY_TINYTHREADS
     file TTHREAD_TTH_SLEEP_C "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/src/tth_sleep.c" to "$PROJECT_SOURCE_FILES/TINYTH/src/tth_sleep.c"
     file TTHREAD_TTH_THREAD_C "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/src/tth_thread.c" to "$PROJECT_SOURCE_FILES/TINYTH/src/tth_thread.c"
 
+    template TTHREAD_OSAL_H "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc/osal/osal.h.ftl" to "$PROJECT_HEADER_FILES/app/system_config/$CONFIGURATION/osal/osal.h"
+    file TTHREAD_OSAL_TINYTHREADS_H "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc/osal/osal_tinythreads.h" to "$PROJECT_HEADER_FILES/framework/osal/osal_tinythreads.h"
+
     file TTHREAD_PRIV_TTH_CORE_H "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc/priv/tth_core.h" to "$PROJECT_HEADER_FILES/TINYTH/inc/priv/tth_core.h"
     file TTHREAD_PRIV_TTH_MUTEX_H "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc/priv/tth_mutex.h" to "$PROJECT_HEADER_FILES/TINYTH/inc/priv/tth_mutex.h"
     file TTHREAD_PTHREAD_H "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc/pthread.h" to "$PROJECT_HEADER_FILES/TINYTH/inc/pthread.h"
@@ -280,14 +285,20 @@ ifblock USE_3RDPARTY_TINYTHREADS
         file TTHREAD_PRIV_TTH_ARCH_PIC32MZ_H "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc/priv/tth_arch_pic32mz.h" to "$PROJECT_HEADER_FILES/TINYTH/inc/priv/tth_arch_pic32mz.h"
     endif
 
+    compiler TTHREAD_COMPILER_INCLUDEPATH_1 includepath "$PROJECT_SOURCE_FILES/system_config/$CONFIGURATION"
+    assembler TTHREAD_ASSEMBLER_INCLUDEPATH_1 includepath "$PROJECT_SOURCE_FILES/system_config/$CONFIGURATION"
+
     ifblock PROJECT_STANDALONE = n
-        compiler TTHREAD_COMPILER_INCLUDEPATH_1 includepath "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc"
-        assembler TTHREAD_ASSEMBLER_INCLUDEPATH_1 includepath "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc"
+        compiler TTHREAD_COMPILER_INCLUDEPATH_2 includepath "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc"
+        assembler TTHREAD_ASSEMBLER_INCLUDEPATH_2 includepath "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc"
     endif
 
     ifblock PROJECT_STANDALONE = y
-        compiler TTHREAD_COMPILER_INCLUDEPATH_1_SA includepath "$PROJECT_HEADER_FILES/TINYTH/inc"
-        assembler TTHREAD_ASSEMBLER_INCLUDEPATH_1_SA includepath "$PROJECT_HEADER_FILES/TINYTH/inc"
+        compiler TTHREAD_COMPILER_INCLUDEPATH_2_SA includepath "$PROJECT_HEADER_FILES/TINYTH/inc"
+        assembler TTHREAD_ASSEMBLER_INCLUDEPATH_2_SA includepath "$PROJECT_HEADER_FILES/TINYTH/inc"
     endif
+
+    compiler TTHREAD_COMPILER_DEFINE_1 define "__tinythreads__"
+    assembler TTHREAD_ASSEMBLER_DEFINE_1 define "__tinythreads__"
 
 endif
