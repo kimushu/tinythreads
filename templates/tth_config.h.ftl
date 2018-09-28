@@ -17,19 +17,19 @@
  * | ${off_next?string?left_pad(3)} | cp0.Status           | Always    |
 <#assign off_sts = off_next>
 <#assign off_next += 4>
- * | ${off_next?string?left_pad(3)} | Hi,Lo                | Always    |
+ * | ${off_next?string?left_pad(3)} | Lo,Hi                | Always    |
 <#assign off_acc = off_next>
 <#assign off_next += 8>
-<#if CONFIG_TTHREAD_HAS_SRS == false || CONFIG_TTHREAD_ENABLE_SRS == false>
- * | ${off_next?string?left_pad(3)} | at,v0-1,a0-3,t0-9,ra | Always    |
+ * | ${off_next?string?left_pad(3)} | at,v0-1,a0-3,t0-9,ra | <#if
+CONFIG_TTHREAD_HAS_SRS == false || CONFIG_TTHREAD_ENABLE_SRS == false
+>Always    |<#else>Nested*   | *For top-level, this space left empty.</#if>
 <#assign off_gprt = off_next>
 <#assign off_next += (4*18)>
-</#if>
- * | ${off_next?string?left_pad(3)} | pad1,f0-19,FCSR,pad2 | <#if
-CONFIG_TTHREAD_HAS_FPU == true && CONFIG_TTHREAD_FPU_DISALLOW_IN_ISR == false
->Always    |<#else>Nested*   | *For top-level, this space left empty.</#if>
+<#if CONFIG_TTHREAD_HAS_FPU == true && CONFIG_TTHREAD_FPU_DISALLOW_IN_ISR == false>
+ * | ${off_next?string?left_pad(3)} | pad1,f0-19,FCSR,pad2 | Always    |
 <#assign off_fpu = off_next>
 <#assign off_next += (4+8*20+4)>
+</#if>
 <#if CONFIG_TTHREAD_HAS_DSP == true && CONFIG_TTHREAD_DSP_DISALLOW_IN_ISR == false>
  * | ${off_next?string?left_pad(3)} | {Lo,Hi}1-3,DSPCtrl   | Always    |
 <#assign off_dsp = off_next>
@@ -37,11 +37,6 @@ CONFIG_TTHREAD_HAS_FPU == true && CONFIG_TTHREAD_FPU_DISALLOW_IN_ISR == false
 </#if>
  * |     | (Total size: ${off_next?string?left_pad(3)})    | Nested    |
 <#assign siz_nested = off_next>
-<#if CONFIG_TTHREAD_HAS_SRS == true && CONFIG_TTHREAD_ENABLE_SRS == true>
- * | ${off_next?string?left_pad(3)} | at,v0-1,a0-3,t0-9,ra | Nested    |
-<#assign off_gprt = off_next>
-<#assign off_next += (4*18)>
-</#if>
 <#if CONFIG_TTHREAD_HAS_FPU == true && CONFIG_TTHREAD_FPU_DISALLOW_IN_ISR == true>
  * | ${off_next?string?left_pad(3)} | pad1,f0-19,FCSR,pad2 | Top-level |
 <#assign off_fpu = off_next>
@@ -57,75 +52,75 @@ CONFIG_TTHREAD_HAS_FPU == true && CONFIG_TTHREAD_FPU_DISALLOW_IN_ISR == false
  * +-----+----------------------+-----------+
  */
 
-#define TTHREAD_MAX_IPL_COUNT                   (${CONFIG_TTHREAD_MAX_IPL_COUNT})
-#define TTHREAD_HAS_SRS                         ${CONFIG_TTHREAD_HAS_SRS?then(1,0)}
-#define TTHREAD_HAS_FPU                         ${CONFIG_TTHREAD_HAS_FPU?then(1,0)}
-#define TTHREAD_HAS_DSP                         ${CONFIG_TTHREAD_HAS_DSP?then(1,0)}
+#define TTHREAD_MAX_IPL_COUNT           ${CONFIG_TTHREAD_MAX_IPL_COUNT}
+#define TTHREAD_HAS_SRS                 ${CONFIG_TTHREAD_HAS_SRS?then(1,0)}
+#define TTHREAD_HAS_FPU                 ${CONFIG_TTHREAD_HAS_FPU?then(1,0)}
+#define TTHREAD_HAS_DSP                 ${CONFIG_TTHREAD_HAS_DSP?then(1,0)}
 
-#define TTHREAD_ENABLE_COND                     ${CONFIG_TTHREAD_ENABLE_COND?then(1,0)}
-#define TTHREAD_ENABLE_MUTEX                    ${CONFIG_TTHREAD_ENABLE_MUTEX?then(1,0)}
-#define TTHREAD_ENABLE_SEM                      ${CONFIG_TTHREAD_ENABLE_SEM?then(1,0)}
-#define TTHREAD_ENABLE_ONCE                     ${CONFIG_TTHREAD_ENABLE_ONCE?then(1,0)}
-#define TTHREAD_ENABLE_RWLOCK                   ${CONFIG_TTHREAD_ENABLE_RWLOCK?then(1,0)}
-#define TTHREAD_ENABLE_SPIN                     ${CONFIG_TTHREAD_ENABLE_SPIN?then(1,0)}
-#define TTHREAD_ENABLE_SLEEP                    ${CONFIG_TTHREAD_ENABLE_SLEEP?then(1,0)}
-#define TTHREAD_ENABLE_PROF                     ${CONFIG_TTHREAD_ENABLE_PROF?then(1,0)}
-#define TTHREAD_ENABLE_NAME                     ${CONFIG_TTHREAD_ENABLE_NAME?then(1,0)}
+#define TTHREAD_ENABLE_COND             ${CONFIG_TTHREAD_ENABLE_COND?then(1,0)}
+#define TTHREAD_ENABLE_MUTEX            ${CONFIG_TTHREAD_ENABLE_MUTEX?then(1,0)}
+#define TTHREAD_ENABLE_SEM              ${CONFIG_TTHREAD_ENABLE_SEM?then(1,0)}
+#define TTHREAD_ENABLE_ONCE             ${CONFIG_TTHREAD_ENABLE_ONCE?then(1,0)}
+#define TTHREAD_ENABLE_RWLOCK           ${CONFIG_TTHREAD_ENABLE_RWLOCK?then(1,0)}
+#define TTHREAD_ENABLE_SPIN             ${CONFIG_TTHREAD_ENABLE_SPIN?then(1,0)}
+#define TTHREAD_ENABLE_SLEEP            ${CONFIG_TTHREAD_ENABLE_SLEEP?then(1,0)}
+#define TTHREAD_ENABLE_PROF             ${CONFIG_TTHREAD_ENABLE_PROF?then(1,0)}
+#define TTHREAD_ENABLE_NAME             ${CONFIG_TTHREAD_ENABLE_NAME?then(1,0)}
 
-#define TTHREAD_PREEMPTION_ENABLE               ${CONFIG_TTHREAD_PREEMPTION_ENABLE?then(1,0)}
+#define TTHREAD_PREEMPTION_ENABLE       ${CONFIG_TTHREAD_PREEMPTION_ENABLE?then(1,0)}
 <#if CONFIG_TTHREAD_PREEMPTION_ENABLE == true>
-#define TTHREAD_PREEMPTION_INTERVAL             (${CONFIG_TTHREAD_PREEMPTION_INTERVAL}ul)
+#define TTHREAD_PREEMPTION_INTERVAL     ${CONFIG_TTHREAD_PREEMPTION_INTERVAL}ul
 </#if>
 
 <#if CONFIG_TTHREAD_ENABLE_SLEEP == true || CONFIG_TTHREAD_PREEMPTION_ENABLE == true>
-#define TTHREAD_CPU_CLOCK_HZ                    (${CONFIG_TTHREAD_CPU_CLOCK_HZ?number?c}ul)
-#define TTHREAD_PERIPHERAL_CLOCK_HZ             (${CONFIG_TTHREAD_PERIPHERAL_CLOCK_HZ?number?c}ul)
-#define TTHREAD_TIMER_RESOLUTION_US             (${CONFIG_TTHREAD_TIMER_RESOLUTION_US}ul)
-#define TTHREAD_TICKS_PER_SEC                   (1000000ul / TTHREAD_TIMER_RESOLUTION_US)
+#define TTHREAD_CPU_CLOCK_HZ            ${CONFIG_TTHREAD_CPU_CLOCK_HZ?number?c}ul
+#define TTHREAD_PERIPHERAL_CLOCK_HZ     ${CONFIG_TTHREAD_PERIPHERAL_CLOCK_HZ?number?c}ul
+#define TTHREAD_TIMER_RESOLUTION_US     ${CONFIG_TTHREAD_TIMER_RESOLUTION_US}ul
+#define TTHREAD_TICKS_PER_SEC           (1000000ul / TTHREAD_TIMER_RESOLUTION_US)
 </#if>
 
-#define SCHED_PRIORITY_MAX                      (${CONFIG_TTHREAD_SCHED_PRIORITY_MAX})
-#define SCHED_PRIORITY_MIN                      (${CONFIG_TTHREAD_SCHED_PRIORITY_MIN})
-#define SCHED_PRIORITY_DEFAULT                  (${CONFIG_TTHREAD_SCHED_PRIORITY_DEFAULT})
-#define SCHED_POLICY_DEFAULT_FF                 ${CONFIG_TTHREAD_SCHED_POLICY_DEFAULT_FF?then(1,0)}
-#define PTHREAD_STACK_MIN_OVERRIDE              (${CONFIG_TTHREAD_STACK_MIN})
+#define SCHED_PRIORITY_MAX              ${CONFIG_TTHREAD_SCHED_PRIORITY_MAX}
+#define SCHED_PRIORITY_MIN              ${CONFIG_TTHREAD_SCHED_PRIORITY_MIN}
+#define SCHED_PRIORITY_DEFAULT          ${CONFIG_TTHREAD_SCHED_PRIORITY_DEFAULT}
+#define SCHED_POLICY_DEFAULT_FF         ${CONFIG_TTHREAD_SCHED_POLICY_DEFAULT_FF?then(1,0)}
+#define PTHREAD_STACK_MIN_OVERRIDE      ${CONFIG_TTHREAD_STACK_MIN}
 
-#define TTHREAD_THREAD_SAFE_NEWLIB              ${CONFIG_TTHREAD_THREAD_SAFE_NEWLIB?then(1,0)}
-#define TTHREAD_STRICT_CHECK                    ${CONFIG_TTHREAD_STRICT_CHECK?then(1,0)}
+#define TTHREAD_THREAD_SAFE_NEWLIB      ${CONFIG_TTHREAD_THREAD_SAFE_NEWLIB?then(1,0)}
+#define TTHREAD_STRICT_CHECK            ${CONFIG_TTHREAD_STRICT_CHECK?then(1,0)}
 <#if CONFIG_TTHREAD_HAS_SRS>
-#define TTHREAD_ENABLE_SRS                      ${CONFIG_TTHREAD_ENABLE_SRS?then(1,0)}
+#define TTHREAD_ENABLE_SRS              ${CONFIG_TTHREAD_ENABLE_SRS?then(1,0)}
 </#if>
 
 <#if CONFIG_TTHREAD_HAS_FPU>
-#define TTHREAD_FPU_DELAYED_SWITCH              ${CONFIG_TTHREAD_FPU_DELAYED_SWITCH?then(1,0)}
-#define TTHREAD_FPU_INSTANT_SWITCH              ${CONFIG_TTHREAD_FPU_DELAYED_SWITCH?then(0,1)}
-#define TTHREAD_FPU_DISALLOW_IN_ISR             ${CONFIG_TTHREAD_FPU_DISALLOW_IN_ISR?then(1,0)}
-#define TTHREAD_FPU_DELAYED_IN_ISR              (TTHREAD_FPU_DELAYED_SWITCH && !TTHREAD_FPU_DISALLOW_IN_ISR)
+#define TTHREAD_FPU_DELAYED_SWITCH      ${CONFIG_TTHREAD_FPU_DELAYED_SWITCH?then(1,0)}
+#define TTHREAD_FPU_INSTANT_SWITCH      ${CONFIG_TTHREAD_FPU_DELAYED_SWITCH?then(0,1)}
+#define TTHREAD_FPU_DISALLOW_IN_ISR     ${CONFIG_TTHREAD_FPU_DISALLOW_IN_ISR?then(1,0)}
+#define TTHREAD_FPU_DELAYED_IN_ISR      (TTHREAD_FPU_DELAYED_SWITCH && !TTHREAD_FPU_DISALLOW_IN_ISR)
 </#if>
 <#if CONFIG_TTHREAD_HAS_DSP>
-#define TTHREAD_DSP_DELAYED_SWITCH              ${CONFIG_TTHREAD_DSP_DELAYED_SWITCH?then(1,0)}
-#define TTHREAD_DSP_INSTANT_SWITCH              ${CONFIG_TTHREAD_DSP_DELAYED_SWITCH?then(0,1)}
-#define TTHREAD_DSP_DISALLOW_IN_ISR             ${CONFIG_TTHREAD_DSP_DISALLOW_IN_ISR?then(1,0)}
-#define TTHREAD_DSP_DELAYED_IN_ISR              (TTHREAD_DSP_DELAYED_SWITCH && !TTHREAD_DSP_DISALLOW_IN_ISR)
+#define TTHREAD_DSP_DELAYED_SWITCH      ${CONFIG_TTHREAD_DSP_DELAYED_SWITCH?then(1,0)}
+#define TTHREAD_DSP_INSTANT_SWITCH      ${CONFIG_TTHREAD_DSP_DELAYED_SWITCH?then(0,1)}
+#define TTHREAD_DSP_DISALLOW_IN_ISR     ${CONFIG_TTHREAD_DSP_DISALLOW_IN_ISR?then(1,0)}
+#define TTHREAD_DSP_DELAYED_IN_ISR      (TTHREAD_DSP_DELAYED_SWITCH && !TTHREAD_DSP_DISALLOW_IN_ISR)
 </#if>
 
 <#if CONFIG_TTHREAD_THREAD_SAFE_NEWLIB == true>
-#define TTHREAD_CTX_OFF_REENT                   4
+#define TTHREAD_CTX_OFF_REENT           4
 <#if CONFIG_TTHREAD_ENABLE_PROF == true>
-#define TTHREAD_CTX_OFF_SWITCHES                8
+#define TTHREAD_CTX_OFF_SWITCHES        8
 </#if>
 <#elseif CONFIG_TTHREAD_ENABLE_PROF == true>
-#define TTHREAD_CTX_OFF_SWITCHES                4
+#define TTHREAD_CTX_OFF_SWITCHES        4
 </#if>
 
-#define TTHREAD_SAVE_SIZE_NESTED                ${siz_nested}
-#define TTHREAD_SAVE_SIZE_TOP                   ${siz_top}
+#define TTHREAD_SAVE_SIZE_NESTED        ${siz_nested}
+#define TTHREAD_SAVE_SIZE_TOP           ${siz_top}
 
-#define TTHREAD_SAVE_OFF_EPC                    ${off_epc}
-#define TTHREAD_SAVE_OFF_STS                    ${off_sts}
-#define TTHREAD_SAVE_OFF_ACC                    ${off_acc}
-#define TTHREAD_SAVE_OFF_GPRT                   ${off_gprt}
-#define TTHREAD_SAVE_OFF_FPU                    ${off_fpu}
-#define TTHREAD_SAVE_OFF_DSP                    ${off_dsp}
+#define TTHREAD_SAVE_OFF_EPC            ${off_epc}
+#define TTHREAD_SAVE_OFF_STS            ${off_sts}
+#define TTHREAD_SAVE_OFF_ACC            ${off_acc}
+#define TTHREAD_SAVE_OFF_GPRT           ${off_gprt}
+#define TTHREAD_SAVE_OFF_FPU            ${off_fpu}
+#define TTHREAD_SAVE_OFF_DSP            ${off_dsp}
 
 #endif  /* __TTH_CONFIG_H__ */
