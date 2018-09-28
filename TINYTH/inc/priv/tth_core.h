@@ -3,8 +3,8 @@
 
 #if defined(__NIOS2__)
 # include <priv/tth_arch_nios2.h>
-#elif defined(__PIC32MZ__)
-# include <priv/tth_arch_pic32mz.h>
+#elif defined(__PIC32M__)
+# include <priv/tth_arch_pic32m.h>
 #else
 # error "Unsupported architecture"
 #endif

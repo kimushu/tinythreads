@@ -1,3 +1,4 @@
+#ifdef __PIC32M__
 #include <priv/tth_core.h>
 #include <stdint.h>
 
@@ -31,3 +32,5 @@ void *tth_arch_init_stack(tth_thread *thread, void *stack_bottom, void *(*start_
 void tth_arch_cs_cleanup(tth_thread *thread)
 {
 }
+
+#endif  /* __PIC32M__ */

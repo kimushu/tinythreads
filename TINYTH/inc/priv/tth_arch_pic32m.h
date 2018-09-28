@@ -1,5 +1,5 @@
-#ifndef __PRIV_TTH_ARCH_PIC32MZ_H__
-#define __PRIV_TTH_ARCH_PIC32MZ_H__
+#ifndef __PRIV_TTH_ARCH_PIC32M_H__
+#define __PRIV_TTH_ARCH_PIC32M_H__
 
 #include <stdint.h>
 #include <xc.h>
@@ -57,4 +57,4 @@ static inline void tth_arch_cs_exec_switch(void)
 } /* extern "C" */
 #endif
 
-#endif  /* __PRIV_TTH_ARCH_PIC32MZ_H__ */
+#endif  /* __PRIV_TTH_ARCH_PIC32M_H__ */

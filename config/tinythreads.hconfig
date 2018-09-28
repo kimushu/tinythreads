@@ -383,11 +383,9 @@ ifblock USE_3RDPARTY_TINYTHREADS
     file TTHREAD_SEMAPHORE_H "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc/semaphore.h" to "$PROJECT_HEADER_FILES/TINYTH/inc/semaphore.h"
     file TTHREAD_TTHREAD_H "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc/tthread.h" to "$PROJECT_HEADER_FILES/TINYTH/inc/tthread.h"
 
-    ifblock PIC32MZ
-        file TTHREAD_TTH_ARCH_PIC32MZ_C "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/src/tth_arch_pic32mz.c" to "$PROJECT_SOURCE_FILES/TINYTH/src/tth_arch_pic32mz.c"
-        file TTHREAD_TTH_ARCH_PIC32MZ_ASM_S "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/src/tth_arch_pic32mz_asm.S" to "$PROJECT_SOURCE_FILES/TINYTH/src/tth_arch_pic32mz_asm.S"
-        file TTHREAD_PRIV_TTH_ARCH_PIC32MZ_H "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc/priv/tth_arch_pic32mz.h" to "$PROJECT_HEADER_FILES/TINYTH/inc/priv/tth_arch_pic32mz.h"
-    endif
+    file TTHREAD_TTH_ARCH_PIC32M_C "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/src/tth_arch_pic32m.c" to "$PROJECT_SOURCE_FILES/TINYTH/src/tth_arch_pic32m.c"
+    file TTHREAD_TTH_ARCH_PIC32M_ASM_S "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/src/tth_arch_pic32m_asm.S" to "$PROJECT_SOURCE_FILES/TINYTH/src/tth_arch_pic32m_asm.S"
+    file TTHREAD_PRIV_TTH_ARCH_PIC32M_H "$HARMONY_VERSION_PATH/third_party/tinythreads/TINYTH/inc/priv/tth_arch_pic32m.h" to "$PROJECT_HEADER_FILES/TINYTH/inc/priv/tth_arch_pic32m.h"
 
     compiler TTHREAD_COMPILER_INCLUDEPATH_1 includepath "$PROJECT_SOURCE_FILES/system_config/$CONFIGURATION"
     assembler TTHREAD_ASSEMBLER_INCLUDEPATH_1 includepath "$PROJECT_SOURCE_FILES/system_config/$CONFIGURATION"

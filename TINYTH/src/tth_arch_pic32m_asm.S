@@ -1,4 +1,4 @@
-#ifdef __PIC32MZ__
+#ifdef __PIC32M__
 #include <tth_config.h>
 #include <xc.h>
 
@@ -446,4 +446,4 @@ _general_exception_context:
     .end _general_exception_context
 #endif  /* (TTHREAD_FPU_DELAYED_SWITCH) || (TTHREAD_DSP_DELAYED_SWITCH) */
 
-#endif  /* __PIC32MZ__ */
+#endif  /* __PIC32M__ */
