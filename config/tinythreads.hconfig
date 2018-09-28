@@ -1,3 +1,15 @@
+#
+# PIC32 series feature table
+#
+# | Family      | DS number  | CPU Core            | ISA | Small ISA | SRS | FPU | DSP |
+# +-------------+------------|---------------------+-----+-----------+-----+-----+-----+
+# | PIC32MK*    | DS60001402 | MIPS32 microAptiv   | r5  | microMIPS |  1  |  Y  |  Y  |
+# | PIC32MX*    | DS60001156 | MIPS32 M4K          | r2  | MIPS16e   |  0  |  N  |  N  |
+# | PIC32MZ*DA* | DS60001361 | MIPS32 microAptiv   | r2  | microMIPS |  7  |  N  |  Y  |
+# | PIC32MZ*EC* | DS60001191 | MIPS32 microAptiv   | r2  | microMIPS |  7  |  N  |  Y  |
+# | PIC32MZ*EF* | DS60001320 | MIPS32 M-Class Core | r5  | microMIPS |  7  |  Y  |  Y  |
+#
+
 config USE_3RDPARTY_TINYTHREADS
     bool "Use TinyThreads?"
     default n
@@ -20,6 +32,27 @@ ifblock USE_3RDPARTY_TINYTHREADS
         ---endhelp---
 
         comment "TinyThreads - version 1.2"
+
+        config TTHREAD_MAX_IPL_COUNT
+            int
+            default 8
+
+        config TTHREAD_HAS_SRS
+            bool
+            default y if DS60001361 || DS60001191 || DS60001320
+            # DS60001402 (PIC32MK) is not included because it has only 1 shadow set,
+            # but TinyThreads requires at least 2 shadow sets.
+            default n
+
+        config TTHREAD_HAS_FPU
+            bool
+            default y if DS60001402 || DS60001320
+            default n
+
+        config TTHREAD_HAS_DSP
+            bool
+            default y if DS60001402 || DS60001361 || DS60001191 || DS60001320
+            default n
 
         menu "Features"
             ---help---
@@ -251,9 +284,80 @@ ifblock USE_3RDPARTY_TINYTHREADS
                 <div>The minimum size for threads in bytes.</div>
                 ---endhelp---
 
-            # TTHREAD_THREAD_SAFE_NEWLIB 1 "Require thread safe C library"
-            # TTHREAD_STRICT_CHECK 0 "Enable strict integrity check"
-            # TTHREAD_ENABLE_SRS 0 "Use shadow register set to store contexts"
+            config TTHREAD_THREAD_SAFE_NEWLIB
+                bool "Require thread safe C library"
+                default y
+                ---help---
+                <div><strong>TinyThreads - Require thread safe C library</strong></div>
+                <div>&nbsp;</div>
+                <div>This enables switching reentrant structure.</div>
+                ---endhelp---
+
+            config TTHREAD_STRICT_CHECK
+                bool "Enable strict integrity check"
+                default n
+                ---help---
+                <div><strong>TinyThreads - Enable strict integrity check</strong></div>
+                <div>&nbsp;</div>
+                <div>Insert strict integrity check logic for debugging.</div>
+                ---endhelp---
+
+            ifblock TTHREAD_HAS_SRS
+
+                config TTHREAD_ENABLE_SRS
+                    bool "Use shadow register set to store contexts"
+                    default n
+                    ---help---
+                    <div><strong>TinyThreads - Use shadow register set to store contexts</strong></div>
+                    <div>&nbsp;</div>
+                    <div>Use shadow register sets.</div>
+                    ---endhelp---
+
+            endif
+
+            ifblock TTHREAD_HAS_FPU
+
+                config TTHREAD_FPU_DELAYED_SWITCH
+                    bool "Enable delayed switch for FPU registers"
+                    default n
+                    ---help---
+                    <div><strong>TinyThreads - Enable delayed switch for FPU registers</strong></div>
+                    <div>&nbsp;</div>
+                    <div>Switch FPU context only if each thread uses FPU instructions.</div>
+                    ---endhelp---
+
+                config TTHREAD_FPU_DISALLOW_IN_ISR
+                    bool "Disallow FPU usage in ISR"
+                    default n
+                    ---help---
+                    <div><strong>TinyThreads - Disallow FPU usage in ISR</strong></div>
+                    <div>&nbsp;</div>
+                    <div>Disallow FPU instructions in ISR context. If enabled, FPU instructions in ISR will cause an exception.</div>
+                    ---endhelp---
+
+            endif
+
+            ifblock TTHREAD_HAS_DSP
+
+                config TTHREAD_DSP_DELAYED_SWITCH
+                    bool "Enable delayed switch for DSP registers"
+                    default n
+                    ---help---
+                    <div><strong>TinyThreads - Enable delayed switch for DSP registers</strong></div>
+                    <div>&nbsp;</div>
+                    <div>Switch DSP context only if each thread uses DSP instructions.</div>
+                    ---endhelp---
+
+                config TTHREAD_DSP_DISALLOW_IN_ISR
+                    bool "Disallow DSP usage in ISR"
+                    default n
+                    ---help---
+                    <div><strong>TinyThreads - Disallow DSP usage in ISR</strong></div>
+                    <div>&nbsp;</div>
+                    <div>Disallow DSP instructions in ISR context. If enabled, DSP instructions in ISR will cause an exception.</div>
+                    ---endhelp---
+
+            endif
 
         endmenu
     endmenu
