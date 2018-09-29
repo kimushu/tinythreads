@@ -276,8 +276,8 @@ ifblock USE_3RDPARTY_TINYTHREADS
 
             config TTHREAD_STACK_MIN
                 int "Minimum stack size for threads"
-                default 1024
-                range 256 999999999
+                default 4096
+                range 2048 999999999
                 ---help---
                 <div><strong>TinyThreads - Minimum stack size for threads</strong></div>
                 <div>&nbsp;</div>
@@ -402,7 +402,5 @@ ifblock USE_3RDPARTY_TINYTHREADS
 
     compiler TTHREAD_COMPILER_DEFINE_1 define "__tinythreads__"
     assembler TTHREAD_ASSEMBLER_DEFINE_1 define "__tinythreads__"
-
-    add "\n    /* Initialize TinyThreads */\n    tth_initialize();\n" to list SYSTEM_INIT_C_SYS_INITIALIZE_DATA
 
 endif

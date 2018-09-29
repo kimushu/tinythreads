@@ -15,8 +15,13 @@
 <#assign off_epc = off_next>
 <#assign off_next += 4>
  * | ${off_next?string?left_pad(3)} | cp0.Status           | Always    |
-<#assign off_sts = off_next>
+<#assign off_status = off_next>
 <#assign off_next += 4>
+<#if CONFIG_TTHREAD_HAS_SRS == true && CONFIG_TTHREAD_ENABLE_SRS == true>
+ * | ${off_next?string?left_pad(3)} | cp0.SRSctl           | Always    |
+<#assign off_srsctl = off_next>
+<#assign off_next += 4>
+</#if>
  * | ${off_next?string?left_pad(3)} | Lo,Hi                | Always    |
 <#assign off_acc = off_next>
 <#assign off_next += 8>
@@ -117,10 +122,17 @@ CONFIG_TTHREAD_HAS_SRS == false || CONFIG_TTHREAD_ENABLE_SRS == false
 #define TTHREAD_SAVE_SIZE_TOP           ${siz_top}
 
 #define TTHREAD_SAVE_OFF_EPC            ${off_epc}
-#define TTHREAD_SAVE_OFF_STS            ${off_sts}
+#define TTHREAD_SAVE_OFF_STATUS         ${off_status}
+<#if off_srsctl??>
+#define TTHREAD_SAVE_OFF_SRSCTL         ${off_srsctl}
+</#if>
 #define TTHREAD_SAVE_OFF_ACC            ${off_acc}
 #define TTHREAD_SAVE_OFF_GPRT           ${off_gprt}
+<#if off_fpu??>
 #define TTHREAD_SAVE_OFF_FPU            ${off_fpu}
+</#if>
+<#if off_dsp??>
 #define TTHREAD_SAVE_OFF_DSP            ${off_dsp}
+</#if>
 
 #endif  /* __TTH_CONFIG_H__ */
