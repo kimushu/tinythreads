@@ -78,8 +78,44 @@ CONFIG_TTHREAD_HAS_SRS == false || CONFIG_TTHREAD_ENABLE_SRS == false
 </#if>
 
 <#if CONFIG_TTHREAD_ENABLE_SLEEP == true || CONFIG_TTHREAD_PREEMPTION_ENABLE == true>
+<#assign tmripl = CONFIG_TTHREAD_TIMER_IPL?keep_after("IPL")?keep_before(" ")>
+#define TTHREAD_TIMER_IPL               ${tmripl}
+#define TTHREAD_TIMER_IPL_ID            ipl${tmripl}AUTO
+#define TTHREAD_TIMER_SUB_IPL           ${CONFIG_TTHREAD_TIMER_SUB_IPL?keep_before(" ")}
 #define TTHREAD_CPU_CLOCK_HZ            ${CONFIG_TTHREAD_CPU_CLOCK_HZ?number?c}ul
-#define TTHREAD_PERIPHERAL_CLOCK_HZ     ${CONFIG_TTHREAD_PERIPHERAL_CLOCK_HZ?number?c}ul
+<#if CONFIG_TTHREAD_TIMER_TYPE == "Core Timer (CP0)">
+#define TTHREAD_TIMER_PERIPHERAL_ID     0
+#define TTHREAD_TIMER_IRQ               _CORE_TIMER_VECTOR
+#define TTHREAD_TIMER_CLOCK_HZ          (TTHREAD_CPU_CLOCK_HZ / 2)
+<#else>
+<#assign tmrid = CONFIG_TTHREAD_TIMER_ID?keep_after("TMR_ID_")>
+#define TTHREAD_TIMER_PERIPHERAL_ID     ${tmrid}
+#define TTHREAD_TIMER_REG_TXCONbits     T${tmrid}CONbits
+#define TTHREAD_TIMER_REG_TXCONbits_t   __T${tmrid}CONbits_t
+#define TTHREAD_TIMER_REG_PRX           PR${tmrid}
+#define TTHREAD_TIMER_REG_TMRX          TMR${tmrid}
+#define TTHREAD_TIMER_IRQ               _TIMER_${tmrid}_VECTOR
+#define TTHREAD_TIMER_CLOCK_HZ          ${CONFIG_TTHREAD_PERIPHERAL_CLOCK_HZ?number?c}ul
+<#if tmrid == "1">
+#define TTHREAD_TIMER_PRESCALER0        1
+#define TTHREAD_TIMER_PRESCALER1        8
+#define TTHREAD_TIMER_PRESCALER2        64
+#define TTHREAD_TIMER_PRESCALER3        256
+#define TTHREAD_TIMER_PRESCALER4        1
+#define TTHREAD_TIMER_PRESCALER5        1
+#define TTHREAD_TIMER_PRESCALER6        1
+#define TTHREAD_TIMER_PRESCALER7        1
+<#else>
+#define TTHREAD_TIMER_PRESCALER0        1
+#define TTHREAD_TIMER_PRESCALER1        2
+#define TTHREAD_TIMER_PRESCALER2        4
+#define TTHREAD_TIMER_PRESCALER3        8
+#define TTHREAD_TIMER_PRESCALER4        16
+#define TTHREAD_TIMER_PRESCALER5        32
+#define TTHREAD_TIMER_PRESCALER6        64
+#define TTHREAD_TIMER_PRESCALER7        256
+</#if>
+</#if>
 #define TTHREAD_TIMER_RESOLUTION_US     ${CONFIG_TTHREAD_TIMER_RESOLUTION_US}ul
 #define TTHREAD_TICKS_PER_SEC           (1000000ul / TTHREAD_TIMER_RESOLUTION_US)
 </#if>

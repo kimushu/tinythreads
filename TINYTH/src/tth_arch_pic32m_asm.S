@@ -275,15 +275,19 @@ __isr_wrapper_nested:
     .set noreorder
     .set noat
 __isr_wrapper_epilogue:
+    /* Decrement interrupt level */
     lw      t0, %gp_rel(tth_int_level)(gp)
+    addiu   t0, t0, -1
+.Lswitch:
     bnez    t0, .Lno_switch
+    nop     /* delay slot */
 
     /* Top-level return */
 
-.Lswitch:
     lw      v0, %gp_rel(tth_running)(gp)
     lw      v1, %gp_rel(tth_ready)(gp)
     beq     v0, v1, .Lno_switch
+    nop     /* delay slot */
 
     /* Switch thread */
 #if (!TTHREAD_ENABLE_SRS)
@@ -379,8 +383,7 @@ __isr_wrapper_epilogue:
     di
     ehb
 
-    /* Decrement interrupt level */
-    addiu   t0, t0, -1
+    /* Update interrupt level */
     sw      t0, %gp_rel(tth_int_level)(gp)
 
 #if (TTHREAD_FPU_DELAYED_SWITCH) || (TTHREAD_DSP_DELAYED_SWITCH)
@@ -539,7 +542,7 @@ _general_exception_context:
 #endif
 
     j       .Lswitch
-    nop     /* delay slot */
+    lw      t0, %gp_rel(tth_int_level)(gp)  /* delay slot */
 
 #if (TTHREAD_FPU_DELAYED_SWITCH)
 .Lexc_cpu:
@@ -833,8 +836,12 @@ tth_arch_initialize:
     eret
 1:  /* Now CSS == 1 */
 #endif
+#ifdef TTHREAD_TIMER_IRQ
+    j       tth_arch_init_timer
+#else
     jr      ra
-    nop
+#endif
+    nop     /* delay slot */
     .end tth_arch_initialize
 
 /*
@@ -1016,5 +1023,9 @@ tth_arch_exit_guard:
     j       pthread_exit
     move    a0, v0  /* delay slot */
     .end tth_arch_exit_guard
+
+#ifdef TTHREAD_TIMER_IRQ
+    .section .vector_
+#endif  /* defined(TTHREAD_TIMER_IRQ) */
 
 #endif  /* __PIC32M__ */

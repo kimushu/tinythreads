@@ -23,6 +23,15 @@ config USE_3RDPARTY_TINYTHREADS_DISABLED
     depends on USE_3RDPARTY_RTOS
     persistent
 
+enum TTHREAD_ENUM_TIMER_TYPE
+    "Core Timer (CP0)" || "Timer Peripheral"
+
+enum TTHREAD_ENUM_IPL
+    "IPL1 (Lowest)" || "IPL2" || "IPL3" || "IPL4" || "IPL5" || "IPL6" || "IPL7 (Highest)"
+
+enum TTHREAD_ENUM_SUB_IPL
+    "0 (Lowest)" || "1" || "2" || "3 (Highest)"
+
 ifblock USE_3RDPARTY_TINYTHREADS
     menu "TinyThreads Configuration"
         ---help---
@@ -181,16 +190,33 @@ ifblock USE_3RDPARTY_TINYTHREADS
             <div>Configure timer resource.</div>
             ---endhelp---
 
-            config TTHREAD_TIMER_ID
-                string "Timer Module ID"
-                range TMR_MODULE_ID
-                persistent
-                default "TMR_ID_1"
-                ---help---
-                <div><strong>TinyThreads - Timer Module ID</strong></div>
-                <div>&nbsp;</div>
-                <div>Set ID of timer module that used for sleep and preemption.</div>
-                ---endhelp---
+            config TTHREAD_TIMER_TYPE
+                string "Timer Type"
+                range TTHREAD_ENUM_TIMER_TYPE
+                default "Core Timer (CP0)"
+
+            ifblock TTHREAD_TIMER_TYPE = "Timer Peripheral"
+                config TTHREAD_TIMER_ID
+                    string "Timer Module ID"
+                    range TMR_MODULE_ID
+                    #persistent
+                    default "TMR_ID_1"
+                    ---help---
+                    <div><strong>TinyThreads - Timer Module ID</strong></div>
+                    <div>&nbsp;</div>
+                    <div>Set ID of timer module that used for sleep and preemption.</div>
+                    ---endhelp---
+            endif
+
+            config TTHREAD_TIMER_IPL
+                string "Timer Priority"
+                range TTHREAD_ENUM_IPL
+                default "IPL1 (Lowest)"
+
+            config TTHREAD_TIMER_SUB_IPL
+                string "Timer Sub-priority"
+                range TTHREAD_ENUM_SUB_IPL
+                default "0 (Lowest)"
 
             config TTHREAD_CPU_CLOCK_HZ
                 string "CPU Clock Speed (Hz)"
@@ -198,11 +224,17 @@ ifblock USE_3RDPARTY_TINYTHREADS
                 default "40000000" if !USE_SYS_CLK
                 persistent if USE_SYS_CLK
 
-            config TTHREAD_PERIPHERAL_CLOCK_HZ
-                string "Peripheral Clock Speed (Hz)"
-                default SYS_CLK_PBCLK2_FREQ if USE_SYS_CLK && PIC32MZ
-                default "40000000" if !USE_SYS_CLK
-                persistent if USE_SYS_CLK
+            ifblock TTHREAD_TIMER_TYPE = "Core Timer (CP0)"
+                comment "Core Timer is assumed to run at the half frequency of CPU Clock"
+            endif
+
+            ifblock TTHREAD_TIMER_TYPE = "Timer Peripheral"
+                config TTHREAD_PERIPHERAL_CLOCK_HZ
+                    string "Peripheral Clock Speed (Hz)"
+                    default SYS_CLK_PBCLK2_FREQ if USE_SYS_CLK && PIC32MZ
+                    default "40000000" if !USE_SYS_CLK
+                    persistent if USE_SYS_CLK
+            endif
 
             config TTHREAD_TIMER_RESOLUTION_US
                 int "Timer Resolution (in microseconds)"
