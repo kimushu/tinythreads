@@ -13,16 +13,31 @@
 #endif
 
 #if (TTHREAD_ENABLE_SRS != 0)
-# define TTHREAD_ARCH_THREAD_TYPE           struct { int srs; }
-# define TTHREAD_ARCH_THREAD_INIT_DEFAULT   { .srs = 1, }
-# define TTHREAD_ARCH_THREAD_INIT_IDLE      { .srs = 0, }
+# define TTHREAD_ARCH_CONTEXT_INIT_DEFAULT  { .srs = 1, }
+# define TTHREAD_ARCH_CONTEXT_INIT_IDLE     { .srs = 0, }
 #else
-# undef TTHREAD_ARCH_THREAD_TYPE
+# define TTHREAD_ARCH_CONTEXT_INIT_DEFAULT  {}
+# define TTHREAD_ARCH_CONTEXT_INIT_IDLE     {}
 #endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef struct
+{
+  void *sp;
+#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)
+  void *reent;
+#endif
+#if (TTHREAD_ENABLE_PROF != 0)
+  unsigned switches;
+#endif
+#if (TTHREAD_ENABLE_SRS != 0)
+  int srs;
+#endif
+}
+tth_arch_context;
 
 /* Prototype for inline functions */
 static inline void tth_arch_crash(void) __attribute__((always_inline));
@@ -68,7 +83,6 @@ static inline void tth_arch_cs_exec_switch(void)
 {
   /*
    * Issue "trap <imm5>" instruction
-   * 24 means 24th alphabet "T" -- the first letter of TinyThreads.
    */
   __asm__ volatile("trap 24");
 }

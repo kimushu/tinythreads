@@ -60,7 +60,7 @@ int tth_nios2_alloc_srs(tth_thread *thread)
   }
 
   tth_arch_cs_end(lock);
-  thread->arch.srs = srs;
+  thread->context.srs = srs;
   return srs;
 }
 #endif  /* TTHREAD_ENABLE_SRS */
@@ -68,7 +68,7 @@ int tth_nios2_alloc_srs(tth_thread *thread)
 void tth_arch_cs_cleanup(tth_thread *thread)
 {
 #if (TTHREAD_ENABLE_SRS != 0)
-  int srs = thread->arch.srs;
+  int srs = thread->context.srs;
   if (srs > 0)
   {
     tth_nios2_srs &= ~(((regset_t)1u) << srs);

@@ -21,6 +21,7 @@ static char tth_idle_thread_name[TTHREAD_NAME_MAX_LEN] = "tth-idle";
 #endif
 static tth_thread tth_idle_thread =
 {
+  .context        = TTHREAD_ARCH_CONTEXT_INIT_IDLE,
 #if (TTHREAD_ENABLE_NAME != 0)
   .name           = tth_idle_thread_name,
 #endif
@@ -29,9 +30,6 @@ static tth_thread tth_idle_thread =
   .detachstate    = PTHREAD_CREATE_DETACHED,
   .schedpriority  = 0,
   .schedpolicy    = SCHED_FIFO,
-#ifdef TTHREAD_ARCH_THREAD_TYPE
-  .arch           = TTHREAD_ARCH_THREAD_INIT_IDLE,
-#endif
 };
 
 /*
@@ -42,6 +40,7 @@ static char tth_default_thread_name[TTHREAD_NAME_MAX_LEN] = "tth-default";
 #endif
 static tth_thread tth_default_thread =
 {
+  .context        = TTHREAD_ARCH_CONTEXT_INIT_DEFAULT,
 #if (TTHREAD_ENABLE_NAME != 0)
   .name           = tth_default_thread_name,
 #endif
@@ -50,9 +49,6 @@ static tth_thread tth_default_thread =
   .detachstate    = PTHREAD_CREATE_JOINABLE,
   .schedpriority  = SCHED_PRIORITY_DEFAULT,
   .schedpolicy    = SCHED_POLICY_DEFAULT,
-#ifdef TTHREAD_ARCH_THREAD_TYPE
-  .arch           = TTHREAD_ARCH_THREAD_INIT_DEFAULT,
-#endif
 };
 
 static tth_thread *tth_detach;
@@ -60,6 +56,10 @@ static tth_thread *tth_detach;
 int tth_int_level;
 tth_thread *tth_running;
 tth_thread *tth_ready = &tth_default_thread;
+
+#if (TTHREAD_PREEMPTION_ENABLE != 0) && (TTHREAD_PREEMPTION_INTERVAL > 0)
+int tth_preempt_us;
+#endif
 
 /*
  * [POSIX.1-2001]
@@ -110,12 +110,6 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
 #endif  /* TTHREAD_ENABLE_NAME */
   thread->__priv.thread = object;
 
-#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)  
-  object->reent = reent;
-#endif  /* TTHREAD_THREAD_SAFE_NEWLIB */
-#if (TTHREAD_ENABLE_PROF != 0)
-  object->switches = 0;
-#endif  /* TTHREAD_ENABLE_PROF */
   object->waiter = NULL;
   object->follower = NULL;
   object->detachstate = attr->__priv.detachstate;
@@ -125,8 +119,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
   object->autostack = attr->__priv.stackaddr ? NULL : stackaddr;
   object->shared.retval = NULL;
 
-  object->context = tth_arch_init_stack(object, object, start_routine, arg);
-  if (!object->context)
+  if (!tth_arch_init_context(object, object, start_routine, arg))
   {
 #ifdef TTHREAD_MALLOC_LOCK
     __malloc_lock(_impure_ptr);
@@ -137,6 +130,13 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
 #endif
     return EAGAIN;
   }
+
+#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)  
+  object->context.reent = reent;
+#endif  /* TTHREAD_THREAD_SAFE_NEWLIB */
+#if (TTHREAD_ENABLE_PROF != 0)
+  object->context.switches = 0;
+#endif  /* TTHREAD_ENABLE_PROF */
 
   lock = tth_arch_cs_begin();
   tth_cs_move(&object, &tth_ready, TTHREAD_WAIT_READY);
@@ -157,7 +157,6 @@ void pthread_exit(void *retval)
   tth_arch_cs_begin();
 
   target->shared.retval = retval;
-  target->context = NULL;
   tth_arch_cs_cleanup(target);
 
   if (target->detachstate == PTHREAD_CREATE_JOINABLE)
@@ -320,6 +319,13 @@ __attribute__((weak)) void tth_idle_handler(void)
 }
 
 /*
+ * Idle thread handler for architecture dependent
+ */
+__attribute__((weak)) void tth_arch_idle_handler(void)
+{
+}
+
+/*
  * Idle thread
  */
 static void *tth_idle(void *arg)
@@ -348,6 +354,7 @@ static void *tth_idle(void *arg)
     }
 
     tth_idle_handler();
+    tth_arch_idle_handler();
 
     sched_yield();
   }
@@ -378,17 +385,16 @@ void tth_initialize(void)
 #if (TTHREAD_THREAD_SAFE_NEWLIB != 0)
   reent = ((struct _reent *)stack_bottom) - 1;
   _REENT_INIT_PTR(reent);
-  tth_idle_thread.reent = reent;
   stack_bottom = reent;
 #endif
-  tth_idle_thread.context = tth_arch_init_stack(&tth_idle_thread, stack_bottom, tth_idle, NULL);
-  if (!tth_idle_thread.context)
+  if (!tth_arch_init_context(&tth_idle_thread, stack_bottom, tth_idle, NULL))
   {
     tth_arch_crash();
   }
+  tth_idle_thread.context.reent = reent;
   tth_running = &tth_default_thread;
 #if (TTHREAD_THREAD_SAFE_NEWLIB != 0)
-  tth_running->reent = _impure_ptr;
+  tth_running->context.reent = _impure_ptr;
 #endif
   tth_arch_initialize();
 }
@@ -404,13 +410,12 @@ void tth_int_tick(void)
 #endif  /* TTHREAD_ENABLE_SLEEP */
 #if (TTHREAD_PREEMPTION_ENABLE != 0)
 #if (TTHREAD_PREEMPTION_INTERVAL > 0)
-  static int preemption_us;
-  preemption_us += (1000000 / TTHREAD_TICKS_PER_SEC);
-  if (preemption_us < (TTHREAD_PREEMPTION_INTERVAL * 1000))
+  tth_preempt_us += (1000000 / TTHREAD_TICKS_PER_SEC);
+  if (tth_preempt_us < (TTHREAD_PREEMPTION_INTERVAL * 1000))
   {
     return;
   }
-  preemption_us -= (TTHREAD_PREEMPTION_INTERVAL * 1000);
+  tth_preempt_us -= (TTHREAD_PREEMPTION_INTERVAL * 1000);
 #endif  /* TTHREAD_PREEMPTION_INTERVAL > 0 */
   if (tth_running->schedpolicy == SCHED_RR)
   {

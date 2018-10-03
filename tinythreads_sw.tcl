@@ -13,7 +13,7 @@ set_sw_property display_name "TinyThreads"
 set_sw_property extends_bsp_type HAL
 
 # The version of this software
-set_sw_property version 1.2
+set_sw_property version 1.3
 
 # Localtion in generated BSP
 set_sw_property bsp_subdirectory TINYTH

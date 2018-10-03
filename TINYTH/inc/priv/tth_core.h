@@ -31,13 +31,7 @@ enum
 
 typedef struct tth_thread
 {
-  void *context;          /* Must be 1st item in tth_thread */
-#if (TTHREAD_THREAD_SAFE_NEWLIB != 0)
-  void *reent;            /* Must be 2nd item in tth_thread */
-#endif
-#if (TTHREAD_ENABLE_PROF != 0)
-  unsigned int switches;  /* Must be 2nd/3rd item in tth_thread */
-#endif
+  tth_arch_context context;   /* Must be 1st item in tth_thread */
 #if (TTHREAD_ENABLE_NAME != 0)
   char *name;
 #endif
@@ -66,7 +60,7 @@ extern tth_thread *tth_ready;
 
 /* Architecture dependent functions */
 extern void tth_arch_initialize(void);
-extern void *tth_arch_init_stack(tth_thread *thread, void *stack_bottom, void *(*start_routine)(void *), void *arg);
+extern int  tth_arch_init_context(tth_thread *thread, void *stack_bottom, void *(*start_routine)(void *), void *arg);
 extern int  tth_arch_cs_begin(void);
 extern void tth_arch_cs_end(int lock);
 extern void tth_arch_cs_exec_switch(void);

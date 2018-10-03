@@ -371,9 +371,9 @@ tth_arch_initialize:
 #endif  /* TTHREAD_USE_SRS */
     ret
 
-    .globl tth_arch_init_stack
-    .type  tth_arch_init_stack, @function
-tth_arch_init_stack:
+    .globl tth_arch_init_context
+    .type  tth_arch_init_context, @function
+tth_arch_init_context:
     /* r4: thread */
     /* r5: stack_bottom */
     /* r6: start_routine */
