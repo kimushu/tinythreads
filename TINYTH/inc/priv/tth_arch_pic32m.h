@@ -6,24 +6,24 @@
 #include <cp0defs.h>
 #include <tth_config.h>
 
+#if (TTHREAD_ENABLE_SRS)
+# define TTHREAD_ARCH_CONTEXT_INIT_DEFAULT  { .srs = 1, }
+# define TTHREAD_ARCH_CONTEXT_INIT_IDLE     { .srs = 0, }
+#else
+# define TTHREAD_ARCH_CONTEXT_INIT_DEFAULT  {}
+# define TTHREAD_ARCH_CONTEXT_INIT_IDLE     {}
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+extern void tth_arch_crash(void);
+
 /* Prototype for inline functions */
-static inline void tth_arch_crash(void) __attribute__((always_inline));
 static inline int  tth_arch_cs_begin(void) __attribute__((always_inline));
 static inline void tth_arch_cs_end(int status) __attribute__((always_inline));
 static inline void tth_arch_cs_exec_switch(void) __attribute__((always_inline));
-
-/* Crash system */
-static inline void tth_arch_crash(void)
-{
-  __asm__ __volatile__("di");
-  for (;;) {
-    __asm__ __volatile__("break");
-  }
-}
 
 /*
  * Begin critical section

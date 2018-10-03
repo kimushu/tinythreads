@@ -40,7 +40,7 @@ ifblock USE_3RDPARTY_TINYTHREADS
         <p>Refer to https://github.com/kimushu/tinythreads</p>
         ---endhelp---
 
-        comment "TinyThreads - version 1.2"
+        comment "TinyThreads - version 1.3"
 
         config TTHREAD_MAX_IPL_COUNT
             int
@@ -325,13 +325,22 @@ ifblock USE_3RDPARTY_TINYTHREADS
                 <div>This enables switching reentrant structure.</div>
                 ---endhelp---
 
-            config TTHREAD_STRICT_CHECK
-                bool "Enable strict integrity check"
+            config TTHREAD_ENABLE_ASSERTION
+                bool "Enable assertion check"
                 default n
                 ---help---
-                <div><strong>TinyThreads - Enable strict integrity check</strong></div>
+                <div><strong>TinyThreads - Enable assertion check</strong></div>
                 <div>&nbsp;</div>
-                <div>Insert strict integrity check logic for debugging.</div>
+                <div>Insert assertion check logic for debugging.</div>
+                ---endhelp---
+
+            config TTHREAD_ENABLE_WAIT_IN_IDLE
+                bool "Issue WAIT instruction in idle thread"
+                default y
+                ---help---
+                <div><strong>TinyThreads - Issue WAIT instruction in idle thread</strong></div>
+                <div>&nbsp;</div>
+                <div>Issue WAIT instruction in idle thread to reduce power consumption.</div>
                 ---endhelp---
 
             ifblock TTHREAD_HAS_SRS

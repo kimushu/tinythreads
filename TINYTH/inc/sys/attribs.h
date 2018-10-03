@@ -18,7 +18,7 @@
         ".ent __vector_dispatch_" #v "\n" \
         "__vector_dispatch_" #v ":\n" \
         "lui     $k0, %hi(__vector_wrapper_" #v ")\n" \
-        "j       __isr_wrapper_entry_" #l "\n" \
+        "j       __tth_isr_entry_" #l "\n" \
         "addiu   $k0, $k0, %lo(__vector_wrapper_" #v ")\n" \
         ".end __vector_dispatch_" #v "\n" \
         ".section .text.__vector_wrapper_" #v ", code, keep\n" \

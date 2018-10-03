@@ -5,59 +5,139 @@
 #ifndef __TTH_CONFIG_H__
 #define __TTH_CONFIG_H__
 
+#ifndef __LANGUAGE_ASSEMBLY__
+# include <stdint.h>
+#endif
+
 /*
- * Stack structure for ISRs
- *
- * | Off | Contents             | Condition |
- * +-----+----------------------+-----------+
-<#assign off_next = 0>
- * | ${off_next?string?left_pad(3)} | cp0.EPC              | Always    |
-<#assign off_epc = off_next>
-<#assign off_next += 4>
- * | ${off_next?string?left_pad(3)} | cp0.Status           | Always    |
-<#assign off_status = off_next>
-<#assign off_next += 4>
-<#if CONFIG_TTHREAD_HAS_SRS == true && CONFIG_TTHREAD_ENABLE_SRS == true>
- * | ${off_next?string?left_pad(3)} | cp0.SRSctl           | Always    |
-<#assign off_srsctl = off_next>
-<#assign off_next += 4>
-</#if>
- * | ${off_next?string?left_pad(3)} | Lo,Hi                | Always    |
-<#assign off_acc = off_next>
-<#assign off_next += 8>
- * | ${off_next?string?left_pad(3)} | at,v0-1,a0-3,t0-9,ra | <#if
-CONFIG_TTHREAD_HAS_SRS == false || CONFIG_TTHREAD_ENABLE_SRS == false
->Always    |<#else>Nested*   | *For top-level, this space left empty.</#if>
-<#assign off_gprt = off_next>
-<#assign off_next += (4*18)>
-<#if CONFIG_TTHREAD_HAS_FPU == true && CONFIG_TTHREAD_FPU_DISALLOW_IN_ISR == false>
- * | ${off_next?string?left_pad(3)} | pad1,f0-19,FCSR,pad2 | Always    |
-<#assign off_fpu = off_next>
-<#assign off_next += (4+8*20+4)>
-</#if>
-<#if CONFIG_TTHREAD_HAS_DSP == true && CONFIG_TTHREAD_DSP_DISALLOW_IN_ISR == false>
- * | ${off_next?string?left_pad(3)} | {Lo,Hi}1-3,DSPCtrl   | Always    |
-<#assign off_dsp = off_next>
-<#assign off_next += (4*6+4)>
-</#if>
- * |     | (Total size: ${off_next?string?left_pad(3)})    | Nested    |
-<#assign siz_nested = off_next>
-<#if CONFIG_TTHREAD_HAS_FPU == true && CONFIG_TTHREAD_FPU_DISALLOW_IN_ISR == true>
- * | ${off_next?string?left_pad(3)} | pad1,f0-19,FCSR,pad2 | Top-level |
-<#assign off_fpu = off_next>
-<#assign off_next += (4+8*20+4)>
-</#if>
-<#if CONFIG_TTHREAD_HAS_DSP == true && CONFIG_TTHREAD_DSP_DISALLOW_IN_ISR == true>
- * | ${off_next?string?left_pad(3)} | {Lo,Hi}1-3,DSPCtrl   | Top-level |
-<#assign off_dsp = off_next>
-<#assign off_next += (4*6+4)>
-</#if>
- * |     | (Total size: ${off_next?string?left_pad(3)})    | Top-level |
-<#assign siz_top = off_next>
- * +-----+----------------------+-----------+
+ * +-------------------------------------------------------------------------+
+ * |                           Configuration table                           |
+ * +----------------------------+--------------------------------------------+
+ * | Feature                    | Configration                               |
+ * +----------------------------+--------------------------------------------+
+<#assign config_list = [
+  ["pthread_cond_* APIs", CONFIG_TTHREAD_ENABLE_COND?then("Enabled", "Disabled")],
+  ["pthread_mutex_* APIs", CONFIG_TTHREAD_ENABLE_MUTEX?then("Enabled", "Disabled")],
+  ["sem_* APIs", CONFIG_TTHREAD_ENABLE_SEM?then("Enabled", "Disabled")],
+  ["pthread_rwlock_* APIs", CONFIG_TTHREAD_ENABLE_RWLOCK?then("Enabled", "Disabled")],
+  ["pthread_spin_* APIs", CONFIG_TTHREAD_ENABLE_SPIN?then("Enabled", "Disabled")],
+  ["sleep, usleep APIs", CONFIG_TTHREAD_ENABLE_SLEEP?then("Enabled", "Disabled")],
+  ["Profiling", CONFIG_TTHREAD_ENABLE_PROF?then("Enabled", "Disabled")],
+  ["Shadow registers", CONFIG_TTHREAD_HAS_SRS?then(
+    CONFIG_TTHREAD_ENABLE_SRS?then("Used for context switch", "Not used"),
+    "Not available"
+  )],
+  ["FPU in threads", CONFIG_TTHREAD_HAS_FPU?then(
+    "Enabled (${CONFIG_TTHREAD_FPU_DELAYED_SWITCH?then('Delayed', 'Instant')} switch)",
+    "Not available"
+  )],
+  ["FPU in ISRs", CONFIG_TTHREAD_HAS_FPU?then(
+    CONFIG_TTHREAD_FPU_DISALLOW_IN_ISR?then(
+      "Disabled", "Enabled ${CONFIG_TTHREAD_FPU_DELAYED_SWITCH?then('Delayed', 'Instant')} switch)"
+    ),
+    "Not available"
+  )],
+  ["DSP in threads", CONFIG_TTHREAD_HAS_DSP?then(
+    "Enabled (${CONFIG_TTHREAD_DSP_DELAYED_SWITCH?then('Delayed', 'Instant')} switch)",
+    "Not available"
+  )],
+  ["DSP in ISRs", CONFIG_TTHREAD_HAS_DSP?then(
+    CONFIG_TTHREAD_DSP_DISALLOW_IN_ISR?then(
+      "Disabled", "Enabled (${CONFIG_TTHREAD_DSP_DELAYED_SWITCH?then('Delayed', 'Instant')} switch)"
+    ),
+    "Not available"
+  )]
+]>
+<#list config_list as x>
+ * | ${x[0]?right_pad(26)     } | ${x[1]?right_pad(42)                     } |
+</#list>
+ * +----------------------------+--------------------------------------------+
  */
 
-#define TTHREAD_MAX_IPL_COUNT           ${CONFIG_TTHREAD_MAX_IPL_COUNT}
+/*
+ * +-------------------------------------------------------------------------+
+ * |                          Context saving rules                           |
+ * +--------+-------------------------+--------------------------------------+
+ * | Owner  | Data                    | Where to save                        |
+ * +--------+-------------------------+--------------------------------------+
+<#if CONFIG_TTHREAD_HAS_SRS == true && CONFIG_TTHREAD_ENABLE_SRS == true>
+ * | Thread | Temporary GPRs          | Each shadow register set             |
+ * | Thread | Preserved GPRs          | Each shadow register set             |
+<#else>
+ * | Thread | Temporary GPRs          | ISTACK[0].GPRt                       |
+ * | Thread | Preserved GPRs          | TSTACK.GPRp                          |
+</#if>
+ * | Thread | PC                      | ISTACK[0].CP0                        |
+ * | Thread | Status                  | ISTACK[0].CP0                        |
+<#if CONFIG_TTHREAD_HAS_SRS == true && CONFIG_TTHREAD_ENABLE_SRS == true>
+ * | Thread | SRSctl                  | ISTACK[0].CP0                        |
+</#if>
+ * | Thread | Accumulators            | ISTACK[0].ACC                        |
+<#if CONFIG_TTHREAD_HAS_FPU == true>
+ <#if CONFIG_TTHREAD_FPU_DELAYED_SWITCH == false>
+  <#if CONFIG_TTHREAD_FPU_DISALLOW_IN_ISR == false>
+ * | Thread | Temporary FPU registers | ISTACK[0].FPUt                       |
+  <#else>
+ * | Thread | Temporary FPU registers | TSTACK.FPUt                          |
+  </#if>
+ * | Thread | Preserved FPU registers | TSTACK.FPUp                          |
+ <#else>
+ * | Thread | Temporary FPU registers | TCTX.FPUt           (Delayed switch) |
+ * | Thread | Preserved FPU registers | TCTX.FPUp           (Delayed switch) |
+ </#if>
+</#if>
+<#if CONFIG_TTHREAD_HAS_DSP == true>
+ <#if CONFIG_TTHREAD_DSP_DELAYED_SWITCH == false>
+  <#if CONFIG_TTHREAD_DSP_DISALLOW_IN_ISR == false>
+ * | Thread | DSP registers           | ISTACK[0].DSP                        |
+  <#else>
+ * | Thread | DSP registers           | TSTACK.DSP                           |
+  </#if>
+ <#else>
+ * | Thread | DSP registers           | TCTX.DSP            (Delayed switch) |
+ </#if>
+</#if>
+<#if CONFIG_TTHREAD_THREAD_SAFE_NEWLIB == true>
+ * | Thread | _impure_ptr             | TCTX.reent                           |
+</#if>
+<#if CONFIG_TTHREAD_ENABLE_PROF == true>
+ * | Thread | Switch count            | TCTX.switches                        |
+</#if>
+ * +--------+-------------------------+--------------------------------------+
+ * | ISR[n] | Temporary GPRs          | ISTACK[n+1].GPRt                     |
+ * | ISR[n] | PC                      | ISTACK[n+1].CP0                      |
+ * | ISR[n] | Status                  | ISTACK[n+1].CP0                      |
+<#if CONFIG_TTHREAD_HAS_SRS == true && CONFIG_TTHREAD_ENABLE_SRS == true>
+ * | ISR[n] | SRSctl                  | ISTACK[n+1].CP0                      |
+</#if>
+ * | ISR[n] | Accumulators            | ISTACK[n+1].ACC                      |
+<#if CONFIG_TTHREAD_HAS_FPU == true>
+ <#if CONFIG_TTHREAD_FPU_DISALLOW_IN_ISR == false>
+  <#if CONFIG_TTHREAD_FPU_DELAYED_SWITCH == false>
+ * | ISR[n] | Temporary FPU registers | ISTACK[n+1].FPUt                     |
+  <#else>
+ * | ISR[n] | Temporary FPU registers | ICTX[n].FPUt        (Delayed switch) |
+  </#if>
+ * | ISR[n] | Preserved FPU registers | Function's stack      (Callee-saved) |
+ <#else>
+ * | ISR[n] | All FPU registers       | N/A                (Disabled in ISR) |
+ </#if>
+</#if>
+<#if CONFIG_TTHREAD_HAS_DSP == true>
+ <#if CONFIG_TTHREAD_DSP_DISALLOW_IN_ISR == false>
+  <#if CONFIG_TTHREAD_DSP_DELAYED_SWITCH == false>
+ * | ISR[n] | DSP registers           | ISTACK[n+1].DSP                      |
+  <#else>
+ * | ISR[n] | DSP registers           | ICTX[n].DSP         (Delayed switch) |
+  </#if>
+ <#else>
+ * | ISR[n] | DSP registers           | N/A                (Disabled in ISR) |
+ </#if>
+</#if>
+ * +--------+-------------------------+--------------------------------------+
+ *  (n = interrupt level (0..N))
+ */
+
 #define TTHREAD_HAS_SRS                 ${CONFIG_TTHREAD_HAS_SRS?then(1,0)}
 #define TTHREAD_HAS_FPU                 ${CONFIG_TTHREAD_HAS_FPU?then(1,0)}
 #define TTHREAD_HAS_DSP                 ${CONFIG_TTHREAD_HAS_DSP?then(1,0)}
@@ -127,7 +207,9 @@ CONFIG_TTHREAD_HAS_SRS == false || CONFIG_TTHREAD_ENABLE_SRS == false
 #define PTHREAD_STACK_MIN_OVERRIDE      ${CONFIG_TTHREAD_STACK_MIN}
 
 #define TTHREAD_THREAD_SAFE_NEWLIB      ${CONFIG_TTHREAD_THREAD_SAFE_NEWLIB?then(1,0)}
-#define TTHREAD_STRICT_CHECK            ${CONFIG_TTHREAD_STRICT_CHECK?then(1,0)}
+#define TTHREAD_ENABLE_ASSERTION        ${CONFIG_TTHREAD_ENABLE_ASSERTION?then(1,0)}
+#define TTHREAD_ENABLE_WAIT_IN_IDLE     ${CONFIG_TTHREAD_ENABLE_WAIT_IN_IDLE?then(1,0)}
+
 <#if CONFIG_TTHREAD_HAS_SRS>
 #define TTHREAD_ENABLE_SRS              ${CONFIG_TTHREAD_ENABLE_SRS?then(1,0)}
 </#if>
@@ -145,30 +227,216 @@ CONFIG_TTHREAD_HAS_SRS == false || CONFIG_TTHREAD_ENABLE_SRS == false
 #define TTHREAD_DSP_DELAYED_IN_ISR      (TTHREAD_DSP_DELAYED_SWITCH && !TTHREAD_DSP_DISALLOW_IN_ISR)
 </#if>
 
+<#macro add_gprt_regs>
+  struct {
+    uint32_t at;
+    <#assign off_defines += [["GPR_AT", offset]]>
+    <#assign offset += 4>
+    uint32_t <#list 0..1 as x><#rt>v${x}<#sep>, </#sep>
+      <#t><#assign off_defines += [["GPR_V${x}", offset]]>
+      <#t><#assign offset += 4></#list>;
+    uint32_t <#list 0..3 as x><#rt>a${x}<#sep>, </#sep>
+      <#t><#assign off_defines += [["GPR_A${x}", offset]]>
+      <#t><#assign offset += 4></#list>;
+    uint32_t <#list 0..9 as x><#rt>t${x}<#sep>, </#sep>
+      <#t><#assign off_defines += [["GPR_T${x}", offset]]>
+      <#t><#assign offset += 4></#list>;
+    uint32_t ra;
+    <#assign off_defines += [["GPR_RA", offset]]>
+    <#assign offset += 4>
+  } GPRt;
+</#macro>
+<#macro add_acc_regs>
+  struct {
+    uint32_t Lo, Hi;
+    <#assign off_defines += [["ACC_LO", offset]]>
+    <#assign offset += 4>
+    <#assign off_defines += [["ACC_HI", offset]]>
+    <#assign offset += 4>
+  } ACC;
+</#macro>
+<#macro add_gprp_regs>
+  struct {
+    uint32_t <#list 0..7 as x><#rt>s${x}<#sep>, </#sep>
+      <#t><#assign off_defines += [["GPR_S${x}", offset]]>
+      <#t><#assign offset += 4></#list>;
+    uint32_t fp;
+    <#assign off_defines += [["GPR_FP", offset]]>
+    <#assign offset += 4>
+  } GPRp;
+</#macro>
+<#macro add_fput_regs>
+  struct {
+    <#local align = (offset % 8)>
+    <#if align == 4>
+    uint32_t FCSR;
+    <#assign off_defines += [["FPU_FCSR", offset]]>
+    <#assign offset += 4>
+    </#if>
+    <#list 0..19 as x>
+    uint32_t f${x}lo, f${x}hi;
+    <#assign off_defines += [["FPU_F${x}", offset]]>
+    <#assign offset += 8>
+    </#list>
+    <#if align == 0>
+    uint32_t FCSR;
+    <#assign off_defines += [["FPU_FCSR", offset]]>
+    <#assign offset += 4>
+    </#if>
+  } FPUt;
+</#macro>
+<#macro add_fpup_regs>
+  struct {
+    <#if (offset % 8) != 0>
+      <#stop "Invalid fpup offset">
+    </#if>
+    <#list 20..31 as x>
+    uint32_t f${x}lo, f${x}hi;
+    <#assign off_defines += [["FPU_F${x}", offset]]>
+    <#assign offset += 8>
+    </#list>
+  } FPUp;
+</#macro>
+<#macro add_dsp_regs>
+  struct {
+    <#list 1..3 as x>
+    uint32_t Lo${x}, Hi${x};
+    <#assign off_defines += [["DSP_LO${x}", offset]]>
+    <#assign offset += 4>
+    <#assign off_defines += [["DSP_HI${x}", offset]]>
+    <#assign offset += 4>
+    </#list>
+    uint32_t DSPControl;
+    <#assign off_defines += [["DSP_CTRL", offset]]>
+    <#assign offset += 4>
+  } DSP;
+</#macro>
+<#macro add_padding>
+  <#if (offset % 8) == 4>
+  uint32_t __padding_${offset};
+    <#assign offset += 4>
+  </#if>
+</#macro>
+
+<#-- ================================ ISTACK ================================ -->
+#ifndef __LANGUAGE_ASSEMBLY__
+typedef struct {
+<#assign offset = 0>
+<#assign off_defines = []>
+  struct {
+    uint32_t EPC;
+    <#assign off_defines += [["EPC", offset]]>
+    <#assign offset += 4>
+    uint32_t Status;
+    <#assign off_defines += [["STATUS", offset]]>
+    <#assign offset += 4>
+  <#if CONFIG_TTHREAD_HAS_SRS == true && CONFIG_TTHREAD_ENABLE_SRS == true>
+    uint32_t SRSctl;
+    <#assign off_defines += [["SRSCTL", offset]]>
+    <#assign offset += 4>
+  </#if>
+  } CP0;
+  <@add_gprt_regs/>
+  <@add_acc_regs/>
+<#if CONFIG_TTHREAD_HAS_FPU == true && CONFIG_TTHREAD_FPU_DELAYED_SWITCH == false && CONFIG_TTHREAD_FPU_DISALLOW_IN_ISR == false>
+  <@add_fput_regs/>
+</#if>
+<#if CONFIG_TTHREAD_HAS_DSP == true && CONFIG_TTHREAD_DSP_DELAYED_SWITCH == false && CONFIG_TTHREAD_DSP_DISALLOW_IN_ISR == false>
+  <@add_dsp_regs/>
+</#if>
+  <@add_padding/>
+} __attribute__(( aligned(8) )) tth_arch_isr_stack;
+#endif  /* !defined(__LANGUAGE_ASSEMBLY__) */
+
+<#list off_defines as def>
+#define TTHREAD_ISTACK_OFF_${def[0]?right_pad(12)} ${def[1]}
+</#list>
+#define TTHREAD_ISTACK_SIZE             ${offset}
+
+<#-- ================================ TSTACK ================================ -->
+#ifndef __LANGUAGE_ASSEMBLY__
+typedef struct {
+<#assign offset = 0>
+<#assign off_defines = []>
+<#if CONFIG_TTHREAD_HAS_FPU == true && CONFIG_TTHREAD_FPU_DELAYED_SWITCH == false>
+  <@add_fpup_regs/>
+  <#if CONFIG_TTHREAD_FPU_DISALLOW_IN_ISR == true>
+    <@add_fput_regs/>
+  </#if>
+</#if>
+<#if CONFIG_TTHREAD_HAS_DSP == true && CONFIG_TTHREAD_DSP_DELAYED_SWITCH == false && CONFIG_TTHREAD_DSP_DISALLOW_IN_ISR == true>
+  <@add_dsp_regs/>
+</#if>
+<#if CONFIG_TTHREAD_HAS_SRS == false || CONFIG_TTHREAD_ENABLE_SRS == false>
+  <@add_gprp_regs/>
+</#if>
+  <@add_padding/>
+  tth_arch_isr_stack isr;
+} __attribute__(( aligned(8) )) tth_arch_thread_stack;
+#endif  /* !defined(__LANGUAGE_ASSEMBLY__) */
+
+<#list off_defines as def>
+#define TTHREAD_TSTACK_OFF_${def[0]?right_pad(12)} ${def[1]}
+</#list>
+#define TTHREAD_TSTACK_SIZE             ${offset}
+
+<#-- ================================ ICTX ================================ -->
+#ifndef __LANGUAGE_ASSEMBLY__
+typedef struct {
+<#assign offset = 0>
+<#assign off_defines = []>
+<#if CONFIG_TTHREAD_HAS_FPU == true && CONFIG_TTHREAD_FPU_DELAYED_SWITCH == true && CONFIG_TTHREAD_FPU_DISALLOW_IN_ISR == false>
+  <@add_fput_regs/>
+</#if>
+<#if CONFIG_TTHREAD_HAS_DSP == true && CONFIG_TTHREAD_DSP_DELAYED_SWITCH == true && CONFIG_TTHREAD_DSP_DISALLOW_IN_ISR == false>
+  <@add_dsp_regs/>
+</#if>
+  <@add_padding/>
+  tth_arch_isr_stack isr;
+} __attribute__(( aligned(8) )) tth_arch_isr_context;
+#endif  /* !defined(__LANGUAGE_ASSEMBLY__) */
+
+<#list off_defines as def>
+#define TTHREAD_ICTX_OFF_${def[0]?right_pad(14)} ${def[1]}
+</#list>
+#define TTHREAD_ICTX_SIZE               ${offset}
+
+<#-- ================================ TCTX ================================ -->
+#ifndef __LANGUAGE_ASSEMBLY__
+typedef struct {
+<#assign offset = 0>
+<#assign off_defines = []>
+  tth_arch_thread_stack *sp;
+  <#assign off_defines += [["SP", offset]]>
+  <#assign offset += 4>
+<#if CONFIG_TTHREAD_HAS_FPU == true && CONFIG_TTHREAD_FPU_DELAYED_SWITCH == true>
+  <@add_fput_regs/>
+  <@add_fpup_regs/>
+</#if>
+<#if CONFIG_TTHREAD_HAS_DSP == true && CONFIG_TTHREAD_DSP_DELAYED_SWITCH == true>
+  <@add_dsp_regs/>
+</#if>
 <#if CONFIG_TTHREAD_THREAD_SAFE_NEWLIB == true>
-#define TTHREAD_CTX_OFF_REENT           4
+  void *reent;
+  <#assign off_defines += [["REENT", offset]]>
+  <#assign offset += 4>
+</#if>
 <#if CONFIG_TTHREAD_ENABLE_PROF == true>
-#define TTHREAD_CTX_OFF_SWITCHES        8
+  uint32_t switches;
+  <#assign off_defines += [["SWITCHES", offset]]>
+  <#assign offset += 4>
 </#if>
-<#elseif CONFIG_TTHREAD_ENABLE_PROF == true>
-#define TTHREAD_CTX_OFF_SWITCHES        4
+<#if CONFIG_TTHREAD_ENABLE_SRS == true>
+  uint32_t srs;
+  <#assign off_defines += [["SRS", offset]]>
+  <#assign offset += 4>
 </#if>
+} __attribute__(( aligned(8) )) tth_arch_context;
+#endif  /* !defined(__LANGUAGE_ASSEMBLY__) */
 
-#define TTHREAD_SAVE_SIZE_NESTED        ${siz_nested}
-#define TTHREAD_SAVE_SIZE_TOP           ${siz_top}
-
-#define TTHREAD_SAVE_OFF_EPC            ${off_epc}
-#define TTHREAD_SAVE_OFF_STATUS         ${off_status}
-<#if off_srsctl??>
-#define TTHREAD_SAVE_OFF_SRSCTL         ${off_srsctl}
-</#if>
-#define TTHREAD_SAVE_OFF_ACC            ${off_acc}
-#define TTHREAD_SAVE_OFF_GPRT           ${off_gprt}
-<#if off_fpu??>
-#define TTHREAD_SAVE_OFF_FPU            ${off_fpu}
-</#if>
-<#if off_dsp??>
-#define TTHREAD_SAVE_OFF_DSP            ${off_dsp}
-</#if>
+<#list off_defines as def>
+#define TTHREAD_TCTX_OFF_${def[0]?right_pad(14)} ${def[1]}
+</#list>
+#define TTHREAD_TCTX_SIZE               ${offset}
 
 #endif  /* __TTH_CONFIG_H__ */

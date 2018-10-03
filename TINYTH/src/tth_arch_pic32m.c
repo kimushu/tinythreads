@@ -7,7 +7,7 @@
 uint16_t tth_pic32m_srs = 3;
 #endif
 #if (TTHREAD_FPU_DELAYED_IN_ISR) || (TTHREAD_DSP_DELAYED_IN_ISR)
-void *tth_pic32m_isr_ctx[TTHREAD_MAX_IPL_COUNT];
+tth_arch_isr_context *tth_pic32m_ictx[8];
 #endif
 #if (TTHREAD_FPU_DELAYED_SWITCH)
 void *tth_pic32m_fpu_ctx;
@@ -20,7 +20,7 @@ void *tth_pic32m_dsp_ctx;
 /*
  * Allocate free shadow register set
  */
-void tth_pic32m_alloc_srs(tth_thread *thread)
+int tth_pic32m_alloc_srs(tth_thread *thread)
 {
   int lock = tth_arch_cs_begin();
   uint16_t bits = ~tth_pic32m_srs;
@@ -43,7 +43,7 @@ void tth_pic32m_alloc_srs(tth_thread *thread)
   }
 
   tth_arch_cs_end(lock);
-  thread->arch.srs = srs;
+  thread->context.srs = srs;
   return srs;
 }
 #endif
@@ -51,13 +51,20 @@ void tth_pic32m_alloc_srs(tth_thread *thread)
 void tth_arch_cs_cleanup(tth_thread *thread)
 {
 #if (TTHREAD_ENABLE_SRS)
-  int srs = thread->arch.srs;
+  int srs = thread->context.srs;
   if (srs > 0)
   {
     tth_pic32m_srs &= ~(1u << srs);
   }
 #endif  /* TTHREAD_ENABLE_SRS */
 }
+
+#if (TTHREAD_ENABLE_WAIT_IN_IDLE)
+void tth_arch_idle_handler(void)
+{
+  __asm__ __volatile__("wait");
+}
+#endif
 
 #ifdef TTHREAD_TIMER_IRQ
 typedef struct {
