@@ -367,13 +367,13 @@ __tth_isr_prologue:
     /* at=free, v0=handler, v1=(level<<2) */
 
     /* Save accumulators to ISTACK */
-    mflo    t0
-    sw      t0, OFF_ISTACK(ACC_LO)(sp)
-    mfhi    t1
+    mflo    $1
+    sw      $1, OFF_ISTACK(ACC_LO)(sp)
+    mfhi    $1
 #if (TTHREAD_ENABLE_SRS)
     beqz    v1, 1f
 #endif
-    sw      t1, OFF_ISTACK(ACC_HI)(sp)  /* may be delay slot */
+    sw      $1, OFF_ISTACK(ACC_HI)(sp)  /* may be delay slot */
 
     /* Save GPR temporary registers to ISTACK (except for at,v0-v1) */
     sw      a0, OFF_ISTACK(GPR_A0)(sp)
