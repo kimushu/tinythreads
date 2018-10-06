@@ -1593,6 +1593,7 @@ tth_arch_init_context:
     wrpgpr  ra, t3  /* tth_arch_exit_guard */
 
     /* Restore cp0.SRSctl */
+    nop     /* Clear hazard (wrpgpr -> srsctl) */
     mtc0    t2, _CP0_SRSCTL
 .Lreturn:
     jr      ra
