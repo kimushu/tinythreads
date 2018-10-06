@@ -1,50 +1,15 @@
 # TinyThreads
 
-TinyThreadsは、Altera Nios II上でPOSIX(pthreads)互換のマルチスレッド環境を構築するライブラリです。
-Nios II Eclipse開発環境にてBSP typeの一つとして利用できます。
+TinyThreads is POSIX threads (pthreads) compatible tiny multi-threading library for 32-bit microcontrollers.
 
-TinyThreads is POSIX(pthreads) compatible multi-threading library for Altera Nios II.
-This library can be used as one of BSP types from Nios II Eclipse environment.
+Currently, following processors are supported:
 
-## 使い方 / Usage
+* Intel(Altera) Nios II
+* Microchip PIC32 (MIPS32 Architecture)
 
-1. カスタムIPを置くためのフォルダが用意されていないなら、作成してください。
-   なお、このフォルダはあなたの全プロジェクトから共通で利用する場所とするため、プロジェクトフォルダ(qsfファイルなどがあるフォルダ)の外に作ることをお勧めします。  
-   Prepare your custom IP folder if you don't have that folder.
-   When you creates a new folder, make it in outside of any project folder (which has qsf files etc.) to share this folder in all your projects.
+## マニュアル / Manuals
 
-1. QuartusにカスタムIPを置くフォルダを登録してください。Quartusのメニューから、Tool→Options→General→IP Settings→IP Catalog Search Locationsと進み、
-   Global IP search directoriesリストにフォルダのパスを登録します。この際、フォルダ内を再帰的に検索できるように、パスの後ろに /\*\*/\* を足してください。  
-   Register your custom IP folder to Quartus. From Quartus menu, open Tool -> Options -> General -> IP Settings -> IP Catalog Search Locations and
-   add your custom IP folder path to Global IP search directories list. When you write path to the folder, you have to add "/\*\*/\*" to the tail of
-   path to make search recursive.
-
-1. カスタムIPを置くフォルダに、tinythreadsをcloneします。  
-   Clone tinythreads repository into the your custom IP folder.
-
-   ```
-   cd path_to_custom_ip_folder/
-   git clone https://github.com/kimushu/tinythreads.git
-   ```
-
-1. Nios II Eclipseにて、新規プロジェクトを「Nios II Board Support Package」から作成します。このとき、BSP typeから「TinyThreads」を選んでください。  
-   Make a new project by "Nios II Board Support Package" in Nios II Eclipse. Select "TinyThreads" as a BSP type.
-
-1. プリエンプションの間隔など、設定の変更が必要ならBSP Editorを起動してカスタマイズしてください。
-   TinyThreadsの設定は Main タブの Settings→Advanced→tinyth の下にあります。  
-   You can change settings (preemption interval, etc.) in BSP Editor.
-   Settings for TinyThreads are located at Settings -> Advanced -> tinyth in Main tab.
-
-1. あなたのアプリケーションのBSPを、前項で作成したBSPプロジェクトに変更してください。
-   まだプロジェクトを作成していないなら、新規プロジェクトを「Nios II Application」から作成します。  
-   Change BSP of your application project to the BSP you've created in the previous step.
-   If you don't have your application project yet, you can make a new project by "Nios II Application".
-
-1. あなたのアプリケーションをビルドし直して下さい。  
-   Re-build your application.
-
-1. 初期化処理などを手動で呼び出す必要はありません。もうあなたのアプリケーションではpthread\_create()で新たなスレッドを生成できる状態です。ようこそTinyThreadsへ！  
-   You don't have to call any initialization function manually. Your application is ready to generate a new thread by pthread\_create(). Welcome to TinyThreads!
+See [TinyThreads wiki](https://github.com/kimushu/tinythreads/wiki).
 
 ## ライセンス / License
 The MIT License
@@ -84,9 +49,6 @@ Most features are provided in &lt;pthread.h&gt; header file.
 
 ### ミューテックス / Mutex
 
-BSP設定(tinyth.feature.enable\_mutex)が有効のときに使用可能です(既定値は有効)。  
-This feature is available when BSP setting (tinyth.feature.enable\_mutex) is enabled (default: enable).
-
 | Interface | Name                        | Conforming to | Remarks |
 |:----------|:----------------------------|:--------------|:--------|
 | Type      | pthread\_mutex\_t           | POSIX.1-2001  | |
@@ -99,9 +61,6 @@ This feature is available when BSP setting (tinyth.feature.enable\_mutex) is ena
 
 ### セマフォ / Semaphore
 
-BSP設定(tinyth.feature.enable\_sem)が有効のときに使用可能です(既定値は有効)。  
-This feature is available when BSP setting (tinyth.feature.enable\_sem) is enabled (default: enable).
-
 | Interface | Name           | Conforming to | Remarks |
 |:----------|:---------------|:--------------|:--------|
 | Type      | sem\_t         | POSIX.1-2001  | &lt;semaphore.h&gt; |
@@ -112,9 +71,6 @@ This feature is available when BSP setting (tinyth.feature.enable\_sem) is enabl
 | Function  | sem\_trywait() | POSIX.1-2001  | &lt;semaphore.h&gt; |
 
 ### 条件付き変数 / Conditional variables
-
-BSP設定(tinyth.feature.enable\_condおよびtinyth.feature.enable\_mutex)の両方が有効のときに使用可能です(既定値は有効)。  
-This feature is available when both of BSP setting (tinyth.feature.enable\_cond and tinyth.feature.enable\.mutex) are enabled (default: enable).
 
 | Interface | Name                       | Conforming to | Remarks |
 |:----------|:---------------------------|:--------------|:--------|
@@ -128,9 +84,6 @@ This feature is available when both of BSP setting (tinyth.feature.enable\_cond 
 
 ### 1回きりの初期化 / Once control
 
-BSP設定(tinyth.feature.enable\_onceおよびtinyth.feature.enable\_mutex)の両方が有効のときに使用可能です(既定値は有効)。  
-This feature is available when both of BSP setting (tinyth.feature.enable\_once and tinyth.feature.enable\.mutex) are enabled (default: enable).
-
 | Interface | Name                | Conforming to | Remarks     |
 |:----------|:--------------------|:--------------|:------------|
 | Type      | pthread\_once\_t    | POSIX.1-2001  | |
@@ -139,8 +92,8 @@ This feature is available when both of BSP setting (tinyth.feature.enable\_once 
 
 ### pthreads以外の機能 / Features outside of pthreads
 
-以下のAPIは、本来pthreadsのカバーする範囲ではありませんが、マルチスレッド環境に対して効率的な実装をTinyThreadsが提供できるものです。BSP設定(tinyth.feature.enable\_sleep)が有効の時に使用可能です(既定値は有効)。  
-The following APIs are outside of pthreads but TinyThreads can provide a more effective implementation for multi-threading environment. This feature is available when BSP setting (tinyth.feature.enable\_sleep) is enabled (default: enable).
+以下のAPIは、本来pthreadsのカバーする範囲ではありませんが、マルチスレッド環境に対して効率的な実装をTinyThreadsが提供できるものです。
+The following APIs are outside of pthreads but TinyThreads can provide a more effective implementation for multi-threading environment.
 
 | Interface | Name                | Conforming to | Remarks     |
 |:----------|:--------------------|:--------------|:------------|
@@ -161,4 +114,3 @@ As a general rule, they have never been supported in the future.
 - pthread\_setspecific()
 - sem\_open()
 - sem\_unlink()
-
