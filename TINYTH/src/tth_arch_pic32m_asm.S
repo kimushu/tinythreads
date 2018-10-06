@@ -1333,7 +1333,7 @@ _general_exception_context:
     sw      t8, OFF_ISTACK(GPR_T8)(sp)
     sw      t9, OFF_ISTACK(GPR_T9)(sp)
     sw      ra, OFF_ISTACK(GPR_RA)(sp)
-
+1:
     /* Save accumulators */
     mflo    t0
     sw      t0, OFF_ISTACK(ACC_LO)(sp)
@@ -1454,7 +1454,7 @@ tth_arch_initialize:
     wrpgpr  fp, fp
     wrpgpr  sp, sp
     wrpgpr  ra, ra
-    la      t1, 1f
+    la      t1, 1f  /* Clear hazard (wrpgpr -> srsctl) */
     mtc0    t1, _CP0_EPC
     ehb     /* Clear hazard (epc -> eret) */
     eret
@@ -1504,11 +1504,10 @@ tth_arch_init_context:
     sw      a3, 12(sp)
     sw      a2,  8(sp)
     sw      a1,  4(sp)
-    sw      a0,  0(sp)
 
     /* Allocate free shadow register set */
     jal     tth_pic32m_alloc_srs
-    sw      a1,  0(sp)  /* delay slot */
+    sw      a0,  0(sp)  /* delay slot */
 
     beqz    v0, .Lreturn
     /* Restore registers */
@@ -1516,8 +1515,12 @@ tth_arch_init_context:
     lw      a3, 12(sp)
     lw      a2,  8(sp)
     lw      a1,  4(sp)
-    lw      a1,  0(sp)
+    lw      a0,  0(sp)
     /* v0=SRS_number */
+
+    /* Allocate stack for dummy frame */
+    addiu   a1, a1, -8
+    sw      zero, 4(a1) /* ra = 0 */
 
     /* Allocate stack area for ISTACK and TSTACK */
     addiu   t0, a1, -TTHREAD_ISTACK_SIZE
@@ -1534,6 +1537,9 @@ tth_arch_init_context:
     sw      zero, 0(a1) /* delay slot */
     /* a1=free */
 
+    /* Disable interrupts */
+    di      t3          /* Save value for restore later */
+
     /* Set SRSctl.PSS */
     mfc0    v1, _CP0_SRSCTL
     move    t2, v1      /* Save value for restore later */
@@ -1541,66 +1547,71 @@ tth_arch_init_context:
     mtc0    v1, _CP0_SRSCTL
 
     /* Save SRSctl to new thread's ISTACK */
-    sw      v1, OFF_ISTACK(SRSCTL)(t0)
+    sw      v1, OFF_ISTACK(SRSCTL)(t0)  /* Clear hazard (srsctl -> wrpgpr) */
 
     /* Save Status to new thread's ISTACK */
-    mfc0    v1, _CP0_STATUS
     li      a1, (_CP0_STATUS_CU1_MASK | _CP0_STATUS_MX_MASK | _CP0_STATUS_EXL_MASK | _CP0_STATUS_IE_MASK)
-    or      v1, v1, a1
+    or      a1, t3, a1
 #if (!TTHREAD_FPU_INSTANT_SWITCH)
-    ins     v1, zero, _CP0_STATUS_CU1_POSITION, _CP0_STATUS_CU1_LENGTH
+    ins     a1, zero, _CP0_STATUS_CU1_POSITION, _CP0_STATUS_CU1_LENGTH
 #endif
 #if (!TTHREAD_DSP_INSTANT_SWITCH)
-    ins     v1, zero, _CP0_STATUS_MX_POSITION, _CP0_STATUS_MX_LENGTH
+    ins     a1, zero, _CP0_STATUS_MX_POSITION, _CP0_STATUS_MX_LENGTH
 #endif
-    sw      v1, OFF_ISTACK(STATUS)(t0)
+    sw      a1, OFF_ISTACK(STATUS)(t0)
 
     /* Save EPC to new thread's ISTACK */
     sw      a2, OFF_ISTACK(EPC)(t0) /* start_routine */
 
     /* Initialize GPRs */
-    li      v1, 0xdeadbeef
-    la      t3, tth_arch_exit_guard
-    wrpgpr  $1, v1
-    wrpgpr  v0, v1
-    wrpgpr  v1, v1
+    li      $1, 0xdeadbeef
+    la      a1, tth_arch_exit_guard
+    wrpgpr  $1, $1
+    wrpgpr  v0, $1
+    wrpgpr  v1, $1
     wrpgpr  a0, a3  /* arg */
-    wrpgpr  a1, v1
-    wrpgpr  a2, v1
-    wrpgpr  a3, v1
-    wrpgpr  t0, v1
-    wrpgpr  t1, v1
-    wrpgpr  t2, v1
-    wrpgpr  t3, v1
-    wrpgpr  t4, v1
-    wrpgpr  t5, v1
-    wrpgpr  t6, v1
-    wrpgpr  s0, v1
-    wrpgpr  s1, v1
-    wrpgpr  s2, v1
-    wrpgpr  s3, v1
-    wrpgpr  s4, v1
-    wrpgpr  s5, v1
-    wrpgpr  s6, v1
-    wrpgpr  s7, v1
-    wrpgpr  t8, v1
-    wrpgpr  t9, v1
+    wrpgpr  a1, $1
+    wrpgpr  a2, $1
+    wrpgpr  a3, $1
+    wrpgpr  t0, $1
+    wrpgpr  t1, $1
+    wrpgpr  t2, $1
+    wrpgpr  t3, $1
+    wrpgpr  t4, $1
+    wrpgpr  t5, $1
+    wrpgpr  t6, $1
+    wrpgpr  s0, $1
+    wrpgpr  s1, $1
+    wrpgpr  s2, $1
+    wrpgpr  s3, $1
+    wrpgpr  s4, $1
+    wrpgpr  s5, $1
+    wrpgpr  s6, $1
+    wrpgpr  s7, $1
+    wrpgpr  t8, $1
+    wrpgpr  t9, $1
     wrpgpr  k0, zero
     wrpgpr  k1, zero
     wrpgpr  gp, gp
     wrpgpr  sp, t1  /* TSTACK top */
-    wrpgpr  fp, v1
-    wrpgpr  ra, t3  /* tth_arch_exit_guard */
+    wrpgpr  fp, zero
+    wrpgpr  ra, a1  /* tth_arch_exit_guard */
 
     /* Restore cp0.SRSctl */
     nop     /* Clear hazard (wrpgpr -> srsctl) */
     mtc0    t2, _CP0_SRSCTL
+    ehb     /* Clear hazard (srsctl -> rdpgpr/wrpgpr) */
+    mtc0    t3, _CP0_STATUS
 .Lreturn:
-    jr      ra
+    jr      ra      /* Clear hazard (status -> interrupts) */
     addiu   sp, sp, 24  /* delay slot */
 #else   /* (!TTHREAD_ENABLE_SRS) */
+    /* Allocate stack for dummy frame */
+    addiu   v0, a1, -8
+    sw      zero, 4(v0) /* ra = 0 */
+
     /* Allocate stack area for ISTACK and TSTACK */
-    addiu   v0, a1, -TTHREAD_ISTACK_SIZE
+    addiu   v0, v0, -TTHREAD_ISTACK_SIZE
     addiu   v1, v0, -TTHREAD_TSTACK_SIZE
 
     /* Save stack pointer to TCTX */
@@ -1655,20 +1666,32 @@ tth_arch_init_context:
     sw      t0, OFF_TSTACK(GPR_S6)(v1)
     sw      t0, OFF_TSTACK(GPR_S7)(v1)
     jr      ra
-    sw      t0, OFF_TSTACK(GPR_FP)(v1)
+    sw      zero, OFF_TSTACK(GPR_FP)(v1)
 #endif  /* (!TTHREAD_ENABLE_SRS) */
     .end tth_arch_init_context
 
 /*================================================================================
  * Thread entry guard to pass retval to pthread_exit
  */
-    .section .text.tth_arch_exit_guard, code
+    .section .text.tth_thread_entry, code
     .set noreorder
-    .ent tth_arch_exit_guard
+    .globl tth_thread_entry
+    .ent tth_thread_entry
+tth_thread_entry:
+    /*
+     * Dummy codes for correct call-stack analysis
+     */
+    addiu   sp, sp, 8
+    sw      ra, 4(sp)
 tth_arch_exit_guard:
     /* v0=retval */
-    j       pthread_exit
+    jal     pthread_exit
     move    a0, v0  /* delay slot */
-    .end tth_arch_exit_guard
+    /*
+     * Dummy codes for correct call-stack analysis */
+    lw      ra, 4(sp)
+    jr      ra
+    addiu   sp, sp, 8
+    .end tth_thread_entry
 
 #endif  /* __PIC32M__ */

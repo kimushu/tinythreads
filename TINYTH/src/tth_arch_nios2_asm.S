@@ -395,10 +395,12 @@ tth_arch_init_context:
     addi    sp, sp, 16
     beq     r2, zero, 1f
 
-    /* Set status.PRS */
+    /* Set status.PRS and disable interrupts */
     rdctl   r4, status  /* Original status value */
     orhi    r3, r4, %hi(0x003f0000) /* PRS mask */
     xorhi   r3, r3, %hi(0x003f0000) /* PRS mask */
+    ori     r3, r3, %lo(0x00000001) /* PIE mask */
+    xori    r3, r3, %lo(0x00000001) /* PIE mask */
     slli    r1, r2, 16
     or      r1, r3, r1
     wrctl   status, r1
@@ -452,7 +454,7 @@ tth_arch_init_context:
     ori     r1, r1, %lo(tth_arch_exit_guard)
     wrprs   ra, r1
 
-    /* Restore status.PRS */
+    /* Restore status.PRS and status.PIE */
     wrctl   status, r4
 1:
     ret
