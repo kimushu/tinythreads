@@ -40,7 +40,7 @@ ifblock USE_3RDPARTY_TINYTHREADS
         <p>Refer to https://github.com/kimushu/tinythreads</p>
         ---endhelp---
 
-        comment "TinyThreads - version 1.4b"
+        comment "TinyThreads - version 1.4c"
 
         config TTHREAD_MAX_IPL_COUNT
             int
