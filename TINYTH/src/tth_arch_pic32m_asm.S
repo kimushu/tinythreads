@@ -453,7 +453,7 @@ __tth_isr_prologue:
     /* Call interrupt handler */
     lui     ra, %hi(__tth_isr_epilogue)
     jr      v0
-    ori     ra, ra, %lo(__tth_isr_epilogue) /* delay slot */
+    addiu   ra, ra, %lo(__tth_isr_epilogue) /* delay slot */
     .end __tth_isr_prologue
 
 /*================================================================================
