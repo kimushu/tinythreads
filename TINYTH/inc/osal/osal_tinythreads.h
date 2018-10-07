@@ -38,7 +38,7 @@ OSAL_SEM_TYPE;
 
 static inline OSAL_RESULT OSAL_SEM_Create(OSAL_SEM_HANDLE_TYPE *semID, OSAL_SEM_TYPE type, uint8_t maxCount, uint8_t initialCount)
 {
-  return (sem_init(semID, 0, (type == OSAL_SEM_TYPE_COUNTING) ? initialCount : 0) == 0) ?
+  return (sem_init(semID, 0, (type == OSAL_SEM_TYPE_COUNTING) ? initialCount : 1) == 0) ?
     OSAL_RESULT_TRUE : OSAL_RESULT_FALSE;
 }
 
