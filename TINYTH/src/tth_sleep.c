@@ -123,7 +123,7 @@ void tth_sleep_tick(void)
 #if (TTHREAD_ENABLE_CLOCK != 0)
   tth_time_nsec += ((int)(1000000 / TTHREAD_TICKS_PER_SEC)) * 1000;
   if (tth_time_nsec >= 1000000000) {
-    tth_time_nsec -= 1000000000
+    tth_time_nsec -= 1000000000;
     ++tth_time_sec;
   }
 #endif  /* TTHREAD_ENABLE_CLOCK */

@@ -453,4 +453,8 @@ ifblock USE_3RDPARTY_TINYTHREADS
     compiler TTHREAD_COMPILER_DEFINE_1 define "__tinythreads__"
     assembler TTHREAD_ASSEMBLER_DEFINE_1 define "__tinythreads__"
 
+    ifblock TTHREAD_ENABLE_CLOCK = y
+        compiler TTHREAD_COMPILER_DEFINE_2 define "_POSIX_MONOTONIC_CLOCK"
+    endif
+
 endif
