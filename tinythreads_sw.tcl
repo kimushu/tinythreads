@@ -13,7 +13,7 @@ set_sw_property display_name "TinyThreads"
 set_sw_property extends_bsp_type HAL
 
 # The version of this software
-set_sw_property version 1.4
+set_sw_property version 1.5
 
 # Localtion in generated BSP
 set_sw_property bsp_subdirectory TINYTH
@@ -84,6 +84,8 @@ add_sw_setting boolean system_h_define feature.enable_spin TTHREAD_ENABLE_SPIN 1
 set_sw_setting_property feature.enable_spin group common
 add_sw_setting boolean system_h_define feature.enable_sleep TTHREAD_ENABLE_SLEEP 1 "Enable sleep()/usleep() APIs"
 set_sw_setting_property feature.enable_sleep group common
+add_sw_setting boolean system_h_define feature.enable_clock TTHREAD_ENABLE_CLOCK 1 "Enable clock_*() APIs"
+set_sw_setting_property feature.enable_clock group common
 add_sw_setting boolean system_h_define feature.enable_profile TTHREAD_ENABLE_PROF 0 "Enable internal profiling (Switch counter)"
 set_sw_setting_property feature.enable_profile group common
 add_sw_setting boolean system_h_define feature.enable_name TTHREAD_ENABLE_NAME 0 "Enable thread name for debugging"

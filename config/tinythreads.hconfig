@@ -40,7 +40,7 @@ ifblock USE_3RDPARTY_TINYTHREADS
         <p>Refer to https://github.com/kimushu/tinythreads</p>
         ---endhelp---
 
-        comment "TinyThreads - version 1.4c"
+        comment "TinyThreads - version 1.5"
 
         config TTHREAD_MAX_IPL_COUNT
             int
@@ -131,6 +131,15 @@ ifblock USE_3RDPARTY_TINYTHREADS
                 <div><strong>TinyThreads - Enable sleep() and usleep() APIs</strong></div>
                 <div>&nbsp;</div>
                 <div>Enable sleep APIs.</div>
+                ---endhelp---
+
+            config TTHREAD_ENABLE_CLOCK
+                bool "Enable clock_*() APIs"
+                default y
+                ---help---
+                <div><strong>TinyThreads - Enable clock_*() APIs</strong></div>
+                <div>&nbsp;</div>
+                <div>Enable clock APIs.</div>
                 ---endhelp---
 
             config TTHREAD_ENABLE_PROF
