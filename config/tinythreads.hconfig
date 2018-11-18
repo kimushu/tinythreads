@@ -10,407 +10,414 @@
 # | PIC32MZ*EF* | DS60001320 | MIPS32 M-Class Core | r5  | microMIPS |  7  |  Y  |  Y  |
 #
 
-config USE_3RDPARTY_TINYTHREADS
-    bool "Use TinyThreads?"
-    default n
-    set USE_OSAL to n
-    set OSAL_RTOS to 20
-    depends on !USE_3RDPARTY_RTOS
+menu "TinyThreads"
 
-config USE_3RDPARTY_TINYTHREADS_DISABLED
-    bool "Use TinyThreads?"
-    default n
-    depends on USE_3RDPARTY_RTOS
-    persistent
+    comment "**** Version 1.5 ****"
 
-enum TTHREAD_ENUM_TIMER_TYPE
-    "Core Timer (CP0)" || "Timer Peripheral"
+    config USE_3RDPARTY_TINYTHREADS_NEEDED
+        bool
 
-enum TTHREAD_ENUM_IPL
-    "IPL1 (Lowest)" || "IPL2" || "IPL3" || "IPL4" || "IPL5" || "IPL6" || "IPL7 (Highest)"
+    config USE_3RDPARTY_TINYTHREADS_DISABLED
+        bool "Use TinyThreads"
+        default n
+        depends on USE_3RDPARTY_RTOS
+        persistent
 
-enum TTHREAD_ENUM_SUB_IPL
-    "0 (Lowest)" || "1" || "2" || "3 (Highest)"
+    config USE_3RDPARTY_TINYTHREADS
+        bool "Use TinyThreads"
+        default n if !USE_3RDPARTY_TINYTHREADS_NEEDED
+        default y if USE_3RDPARTY_TINYTHREADS_NEEDED
+        set USE_OSAL to n
+        set OSAL_RTOS to 20
+        depends on !USE_3RDPARTY_RTOS
 
-ifblock USE_3RDPARTY_TINYTHREADS
-    menu "TinyThreads Configuration"
+    enum TTHREAD_ENUM_TIMER_TYPE
+        "Core Timer (CP0)" || "Timer Peripheral"
+
+    enum TTHREAD_ENUM_IPL
+        "IPL1 (Lowest)" || "IPL2" || "IPL3" || "IPL4" || "IPL5" || "IPL6" || "IPL7 (Highest)"
+
+    enum TTHREAD_ENUM_SUB_IPL
+        "0 (Lowest)" || "1" || "2" || "3 (Highest)"
+
+    config TTHREAD_MAX_IPL_COUNT
+        int
+        default 8
+        depends on USE_3RDPARTY_TINYTHREADS
+
+    config TTHREAD_HAS_SRS
+        bool
+        default y if DS60001361 || DS60001191 || DS60001320
+        # DS60001402 (PIC32MK) is not included because it has only 1 shadow set,
+        # but TinyThreads requires at least 2 shadow sets.
+        default n
+        depends on USE_3RDPARTY_TINYTHREADS
+
+    config TTHREAD_HAS_FPU
+        bool
+        default y if DS60001402 || DS60001320
+        default n
+        depends on USE_3RDPARTY_TINYTHREADS
+
+    config TTHREAD_HAS_DSP
+        bool
+        default y if DS60001402 || DS60001361 || DS60001191 || DS60001320
+        default n
+        depends on USE_3RDPARTY_TINYTHREADS
+
+    menu "Features"
+        depends on USE_3RDPARTY_TINYTHREADS
         ---help---
-        <p><strong>TinyThreads</strong></p>
+        <div><strong>TinyThreads - Features</strong></div>
         <div>&nbsp;</div>
-        <p>Refer to https://github.com/kimushu/tinythreads</p>
+        <div>Enable or disable pthread features from the build.</div>
         ---endhelp---
 
-        comment "TinyThreads - version 1.5"
-
-        config TTHREAD_MAX_IPL_COUNT
-            int
-            default 8
-
-        config TTHREAD_HAS_SRS
-            bool
-            default y if DS60001361 || DS60001191 || DS60001320
-            # DS60001402 (PIC32MK) is not included because it has only 1 shadow set,
-            # but TinyThreads requires at least 2 shadow sets.
-            default n
-
-        config TTHREAD_HAS_FPU
-            bool
-            default y if DS60001402 || DS60001320
-            default n
-
-        config TTHREAD_HAS_DSP
-            bool
-            default y if DS60001402 || DS60001361 || DS60001191 || DS60001320
-            default n
-
-        menu "Features"
+        config TTHREAD_ENABLE_COND
+            bool "Enable pthread_cond*() APIs"
+            default y
             ---help---
-            <div><strong>TinyThreads - Features</strong></div>
+            <div><strong>TinyThreads - Enable pthread_cond*() APIs</strong></div>
             <div>&nbsp;</div>
-            <div>Enable or disable pthread features from the build.</div>
+            <div>Enable APIs for condition variable.</div>
             ---endhelp---
 
-            config TTHREAD_ENABLE_COND
-                bool "Enable pthread_cond*() APIs"
-                default y
-                ---help---
-                <div><strong>TinyThreads - Enable pthread_cond*() APIs</strong></div>
-                <div>&nbsp;</div>
-                <div>Enable APIs for condition variable.</div>
-                ---endhelp---
-
-            config TTHREAD_ENABLE_MUTEX
-                bool "Enable pthread_mutex*() APIs"
-                default y
-                ---help---
-                <div><strong>TinyThreads - Enable pthread_mutex*() APIs</strong></div>
-                <div>&nbsp;</div>
-                <div>Enable APIs for mutex.</div>
-                ---endhelp---
-
-            config TTHREAD_ENABLE_SEM
-                bool "Enable sem_*() APIs"
-                default y
-                ---help---
-                <div><strong>TinyThreads - Enable sem_*() APIs</strong></div>
-                <div>&nbsp;</div>
-                <div>Enable APIs for semaphore.</div>
-                ---endhelp---
-
-            config TTHREAD_ENABLE_ONCE
-                bool "Enable pthread_once*() APIs"
-                default y
-                ---help---
-                <div><strong>TinyThreads - Enable pthread_once*() APIs</strong></div>
-                <div>&nbsp;</div>
-                <div>Enable APIs for once control.</div>
-                ---endhelp---
-
-            config TTHREAD_ENABLE_RWLOCK
-                bool "Enable pthread_rwlock*() APIs"
-                default y
-                ---help---
-                <div><strong>TinyThreads - Enable pthread_rwlock*() APIs</strong></div>
-                <div>&nbsp;</div>
-                <div>Enable APIs for read-write lock.</div>
-                ---endhelp---
-
-            config TTHREAD_ENABLE_SPIN
-                bool "Enable pthread_spin*() APIs"
-                default y
-                ---help---
-                <div><strong>TinyThreads - Enable pthread_spin*() APIs</strong></div>
-                <div>&nbsp;</div>
-                <div>Enable APIs for spin lock.</div>
-                ---endhelp---
-
-            config TTHREAD_ENABLE_SLEEP
-                bool "Enable sleep() and usleep() APIs"
-                default y
-                ---help---
-                <div><strong>TinyThreads - Enable sleep() and usleep() APIs</strong></div>
-                <div>&nbsp;</div>
-                <div>Enable sleep APIs.</div>
-                ---endhelp---
-
-            config TTHREAD_ENABLE_CLOCK
-                bool "Enable clock_*() APIs"
-                default y
-                ---help---
-                <div><strong>TinyThreads - Enable clock_*() APIs</strong></div>
-                <div>&nbsp;</div>
-                <div>Enable clock APIs.</div>
-                ---endhelp---
-
-            config TTHREAD_ENABLE_PROF
-                bool "Enable internal profiling (Switch counter)"
-                default n
-                ---help---
-                <div><strong>TinyThreads - Enable internal profiling (Switch counter)</strong></div>
-                <div>&nbsp;</div>
-                <div>Enable profiling for debugging.</div>
-                ---endhelp---
-
-            config TTHREAD_ENABLE_NAME
-                bool "Enable thread name for debugging"
-                default n
-                ---help---
-                <div><strong>TinyThreads - Enable thread name for debugging</strong></div>
-                <div>&nbsp;</div>
-                <div>Enable pthread_getname() and pthread_setname() APIs.</div>
-                ---endhelp---
-
-        endmenu
-
-        menu "Scheduling"
+        config TTHREAD_ENABLE_MUTEX
+            bool "Enable pthread_mutex*() APIs"
+            default y
             ---help---
-            <div><strong>TinyThreads - Scheduling</strong></div>
+            <div><strong>TinyThreads - Enable pthread_mutex*() APIs</strong></div>
             <div>&nbsp;</div>
-            <div>Configure settings about scheduling.</div>
+            <div>Enable APIs for mutex.</div>
             ---endhelp---
 
-            config TTHREAD_PREEMPTION_ENABLE
-                bool "Enable preemption based on system tick"
-                default y
-                ---help---
-                <div><strong>TinyThreads - Enable preemption based on system tick</strong></div>
-                <div>&nbsp;</div>
-                <div>Enable preemptive scheduling.</div>
-                ---endhelp---
-
-            config TTHREAD_PREEMPTION_INTERVAL
-                int "Interval of preemption (in milliseconds)"
-                default 10
-                range 1 999999999
-                depends on TTHREAD_PREEMPTION_ENABLE
-                ---help---
-                <div><strong>TinyThreads - Interval of preemption (in milliseconds)</strong></div>
-                <div>&nbsp;</div>
-                <div>Set interval of preemption. This will be the longest duration for round-robin threads.</div>
-                ---endhelp---
-
-        endmenu
-
-        menu "Timer"
-            depends on TTHREAD_ENABLE_SLEEP || TTHREAD_PREEMPTION_ENABLE
+        config TTHREAD_ENABLE_SEM
+            bool "Enable sem_*() APIs"
+            default y
             ---help---
-            <div><strong>TinyThreads - Timer</strong></div>
+            <div><strong>TinyThreads - Enable sem_*() APIs</strong></div>
             <div>&nbsp;</div>
-            <div>Configure timer resource.</div>
+            <div>Enable APIs for semaphore.</div>
             ---endhelp---
 
-            config TTHREAD_TIMER_TYPE
-                string "Timer Type"
-                range TTHREAD_ENUM_TIMER_TYPE
-                default "Core Timer (CP0)"
+        config TTHREAD_ENABLE_ONCE
+            bool "Enable pthread_once*() APIs"
+            default y
+            ---help---
+            <div><strong>TinyThreads - Enable pthread_once*() APIs</strong></div>
+            <div>&nbsp;</div>
+            <div>Enable APIs for once control.</div>
+            ---endhelp---
 
-            ifblock TTHREAD_TIMER_TYPE = "Timer Peripheral"
-                config TTHREAD_TIMER_ID
-                    string "Timer Module ID"
-                    range TMR_MODULE_ID
-                    #persistent
-                    default "TMR_ID_1"
-                    ---help---
-                    <div><strong>TinyThreads - Timer Module ID</strong></div>
-                    <div>&nbsp;</div>
-                    <div>Set ID of timer module that used for sleep and preemption.</div>
-                    ---endhelp---
-            endif
+        config TTHREAD_ENABLE_RWLOCK
+            bool "Enable pthread_rwlock*() APIs"
+            default y
+            ---help---
+            <div><strong>TinyThreads - Enable pthread_rwlock*() APIs</strong></div>
+            <div>&nbsp;</div>
+            <div>Enable APIs for read-write lock.</div>
+            ---endhelp---
 
-            config TTHREAD_TIMER_IPL
-                string "Timer Priority"
-                range TTHREAD_ENUM_IPL
-                default "IPL1 (Lowest)"
+        config TTHREAD_ENABLE_SPIN
+            bool "Enable pthread_spin*() APIs"
+            default y
+            ---help---
+            <div><strong>TinyThreads - Enable pthread_spin*() APIs</strong></div>
+            <div>&nbsp;</div>
+            <div>Enable APIs for spin lock.</div>
+            ---endhelp---
 
-            config TTHREAD_TIMER_SUB_IPL
-                string "Timer Sub-priority"
-                range TTHREAD_ENUM_SUB_IPL
-                default "0 (Lowest)"
+        config TTHREAD_ENABLE_SLEEP
+            bool "Enable sleep() and usleep() APIs"
+            default y
+            ---help---
+            <div><strong>TinyThreads - Enable sleep() and usleep() APIs</strong></div>
+            <div>&nbsp;</div>
+            <div>Enable sleep APIs.</div>
+            ---endhelp---
 
-            config TTHREAD_CPU_CLOCK_HZ
-                string "CPU Clock Speed (Hz)"
-                default SYS_CLK_FREQ if USE_SYS_CLK
+        config TTHREAD_ENABLE_CLOCK
+            bool "Enable clock_*() APIs"
+            default y
+            ---help---
+            <div><strong>TinyThreads - Enable clock_*() APIs</strong></div>
+            <div>&nbsp;</div>
+            <div>Enable clock APIs.</div>
+            ---endhelp---
+
+        config TTHREAD_ENABLE_PROF
+            bool "Enable internal profiling (Switch counter)"
+            default n
+            ---help---
+            <div><strong>TinyThreads - Enable internal profiling (Switch counter)</strong></div>
+            <div>&nbsp;</div>
+            <div>Enable profiling for debugging.</div>
+            ---endhelp---
+
+        config TTHREAD_ENABLE_NAME
+            bool "Enable thread name for debugging"
+            default n
+            ---help---
+            <div><strong>TinyThreads - Enable thread name for debugging</strong></div>
+            <div>&nbsp;</div>
+            <div>Enable pthread_getname() and pthread_setname() APIs.</div>
+            ---endhelp---
+
+    endmenu
+
+    menu "Scheduling"
+        depends on USE_3RDPARTY_TINYTHREADS
+        ---help---
+        <div><strong>TinyThreads - Scheduling</strong></div>
+        <div>&nbsp;</div>
+        <div>Configure settings about scheduling.</div>
+        ---endhelp---
+
+        config TTHREAD_PREEMPTION_ENABLE
+            bool "Enable preemption based on system tick"
+            default y
+            ---help---
+            <div><strong>TinyThreads - Enable preemption based on system tick</strong></div>
+            <div>&nbsp;</div>
+            <div>Enable preemptive scheduling.</div>
+            ---endhelp---
+
+        config TTHREAD_PREEMPTION_INTERVAL
+            int "Interval of preemption (in milliseconds)"
+            default 10
+            range 1 999999999
+            depends on TTHREAD_PREEMPTION_ENABLE
+            ---help---
+            <div><strong>TinyThreads - Interval of preemption (in milliseconds)</strong></div>
+            <div>&nbsp;</div>
+            <div>Set interval of preemption. This will be the longest duration for round-robin threads.</div>
+            ---endhelp---
+
+    endmenu
+
+    menu "Timer"
+        depends on USE_3RDPARTY_TINYTHREADS && (TTHREAD_ENABLE_SLEEP || TTHREAD_PREEMPTION_ENABLE)
+        ---help---
+        <div><strong>TinyThreads - Timer</strong></div>
+        <div>&nbsp;</div>
+        <div>Configure timer resource.</div>
+        ---endhelp---
+
+        config TTHREAD_TIMER_TYPE
+            string "Timer Type"
+            range TTHREAD_ENUM_TIMER_TYPE
+            default "Core Timer (CP0)"
+
+        ifblock TTHREAD_TIMER_TYPE = "Timer Peripheral"
+            config TTHREAD_TIMER_ID
+                string "Timer Module ID"
+                range TMR_MODULE_ID
+                #persistent
+                default "TMR_ID_1"
+                ---help---
+                <div><strong>TinyThreads - Timer Module ID</strong></div>
+                <div>&nbsp;</div>
+                <div>Set ID of timer module that used for sleep and preemption.</div>
+                ---endhelp---
+        endif
+
+        config TTHREAD_TIMER_IPL
+            string "Timer Priority"
+            range TTHREAD_ENUM_IPL
+            default "IPL1 (Lowest)"
+
+        config TTHREAD_TIMER_SUB_IPL
+            string "Timer Sub-priority"
+            range TTHREAD_ENUM_SUB_IPL
+            default "0 (Lowest)"
+
+        config TTHREAD_CPU_CLOCK_HZ
+            string "CPU Clock Speed (Hz)"
+            default SYS_CLK_FREQ if USE_SYS_CLK
+            default "40000000" if !USE_SYS_CLK
+            persistent if USE_SYS_CLK
+
+        ifblock TTHREAD_TIMER_TYPE = "Core Timer (CP0)"
+            comment "Core Timer is assumed to run at the half frequency of CPU Clock"
+        endif
+
+        ifblock TTHREAD_TIMER_TYPE = "Timer Peripheral"
+            config TTHREAD_PERIPHERAL_CLOCK_HZ
+                string "Peripheral Clock Speed (Hz)"
+                default SYS_CLK_PBCLK2_FREQ if USE_SYS_CLK && PIC32MZ
                 default "40000000" if !USE_SYS_CLK
                 persistent if USE_SYS_CLK
+        endif
 
-            ifblock TTHREAD_TIMER_TYPE = "Core Timer (CP0)"
-                comment "Core Timer is assumed to run at the half frequency of CPU Clock"
-            endif
+        config TTHREAD_TIMER_RESOLUTION_US
+            int "Timer Resolution (in microseconds)"
+            default 1000
+            range 50 999999999
 
-            ifblock TTHREAD_TIMER_TYPE = "Timer Peripheral"
-                config TTHREAD_PERIPHERAL_CLOCK_HZ
-                    string "Peripheral Clock Speed (Hz)"
-                    default SYS_CLK_PBCLK2_FREQ if USE_SYS_CLK && PIC32MZ
-                    default "40000000" if !USE_SYS_CLK
-                    persistent if USE_SYS_CLK
-            endif
+    endmenu
 
-            config TTHREAD_TIMER_RESOLUTION_US
-                int "Timer Resolution (in microseconds)"
-                default 1000
-                range 50 999999999
+    menu "Advanced"
+        depends on USE_3RDPARTY_TINYTHREADS
+        ---help---
+        <div><strong>TinyThreads - Advanced</strong></div>
+        <div>&nbsp;</div>
+        <div>Advanced settings.</div>
+        ---endhelp---
 
-        endmenu
-
-        menu "Advanced"
+        config TTHREAD_SCHED_PRIORITY_MAX
+            int "Maximum priority value"
+            default 99
+            range 1 255
             ---help---
-            <div><strong>TinyThreads - Advanced</strong></div>
+            <div><strong>TinyThreads - Maximum priority value</strong></div>
             <div>&nbsp;</div>
-            <div>Advanced settings.</div>
+            <div>The maximum value of priority. Smaller value has higher priority.</div>
             ---endhelp---
 
-            config TTHREAD_SCHED_PRIORITY_MAX
-                int "Maximum priority value"
-                default 99
-                range 1 255
+        config TTHREAD_SCHED_PRIORITY_MIN
+            int "Minimum priority value"
+            default 1
+            range 1 255
+            ---help---
+            <div><strong>TinyThreads - Minumum priority value</strong></div>
+            <div>&nbsp;</div>
+            <div>The minumum value of priority. Smaller value has higher priority.</div>
+            ---endhelp---
+
+        config TTHREAD_SCHED_PRIORITY_DEFAULT
+            int "Default priority value"
+            default 10
+            ---help---
+            <div><strong>TinyThreads - Default priority value</strong></div>
+            <div>&nbsp;</div>
+            <div>The default value of priority. Smaller value has higher priority.</div>
+            ---endhelp---
+
+        choice TTHREAD_SCHED_POLICY_DEFAULT
+            prompt "Default scheduling policy"
+            default TTHREAD_SCHED_POLICY_DEFAULT_RR
+            ---help---
+            <div><strong>TinyThreads - Default scheduling policy</strong></div>
+            <div>&nbsp;</div>
+            <div>Select default scheduling policy.</div>
+            ---endhelp---
+
+            config TTHREAD_SCHED_POLICY_DEFAULT_RR
+                bool "Round-robin policy (SCHED_RR)"
                 ---help---
-                <div><strong>TinyThreads - Maximum priority value</strong></div>
+                <div><strong>TinyThreads - Round-robin policy (SCHED_RR)</strong></div>
                 <div>&nbsp;</div>
-                <div>The maximum value of priority. Smaller value has higher priority.</div>
+                <div>Use round-robin policy by default.</div>
                 ---endhelp---
 
-            config TTHREAD_SCHED_PRIORITY_MIN
-                int "Minimum priority value"
-                default 1
-                range 1 255
+            config TTHREAD_SCHED_POLICY_DEFAULT_FF
+                bool "FIFO policy (SCHED_FF)"
                 ---help---
-                <div><strong>TinyThreads - Minumum priority value</strong></div>
+                <div><strong>TinyThreads - FIFO policy (SCHED_FF)</strong></div>
                 <div>&nbsp;</div>
-                <div>The minumum value of priority. Smaller value has higher priority.</div>
+                <div>Use FIFO policy by default.</div>
                 ---endhelp---
 
-            config TTHREAD_SCHED_PRIORITY_DEFAULT
-                int "Default priority value"
-                default 10
-                ---help---
-                <div><strong>TinyThreads - Default priority value</strong></div>
-                <div>&nbsp;</div>
-                <div>The default value of priority. Smaller value has higher priority.</div>
-                ---endhelp---
+        endchoice
 
-            choice TTHREAD_SCHED_POLICY_DEFAULT
-                prompt "Default scheduling policy"
-                default TTHREAD_SCHED_POLICY_DEFAULT_RR
-                ---help---
-                <div><strong>TinyThreads - Default scheduling policy</strong></div>
-                <div>&nbsp;</div>
-                <div>Select default scheduling policy.</div>
-                ---endhelp---
+        config TTHREAD_STACK_MIN
+            int "Minimum stack size for threads"
+            default 4096
+            range 2048 999999999
+            ---help---
+            <div><strong>TinyThreads - Minimum stack size for threads</strong></div>
+            <div>&nbsp;</div>
+            <div>The minimum size for threads in bytes.</div>
+            ---endhelp---
 
-                config TTHREAD_SCHED_POLICY_DEFAULT_RR
-                    bool "Round-robin policy (SCHED_RR)"
-                    ---help---
-                    <div><strong>TinyThreads - Round-robin policy (SCHED_RR)</strong></div>
-                    <div>&nbsp;</div>
-                    <div>Use round-robin policy by default.</div>
-                    ---endhelp---
+        config TTHREAD_THREAD_SAFE_NEWLIB
+            bool "Require thread safe C library"
+            default y
+            ---help---
+            <div><strong>TinyThreads - Require thread safe C library</strong></div>
+            <div>&nbsp;</div>
+            <div>This enables switching reentrant structure.</div>
+            ---endhelp---
 
-                config TTHREAD_SCHED_POLICY_DEFAULT_FF
-                    bool "FIFO policy (SCHED_FF)"
-                    ---help---
-                    <div><strong>TinyThreads - FIFO policy (SCHED_FF)</strong></div>
-                    <div>&nbsp;</div>
-                    <div>Use FIFO policy by default.</div>
-                    ---endhelp---
+        config TTHREAD_ENABLE_ASSERTION
+            bool "Enable assertion check"
+            default n
+            ---help---
+            <div><strong>TinyThreads - Enable assertion check</strong></div>
+            <div>&nbsp;</div>
+            <div>Insert assertion check logic for debugging.</div>
+            ---endhelp---
 
-            endchoice
+        config TTHREAD_ENABLE_WAIT_IN_IDLE
+            bool "Issue WAIT instruction in idle thread"
+            default y
+            ---help---
+            <div><strong>TinyThreads - Issue WAIT instruction in idle thread</strong></div>
+            <div>&nbsp;</div>
+            <div>Issue WAIT instruction in idle thread to reduce power consumption.</div>
+            ---endhelp---
 
-            config TTHREAD_STACK_MIN
-                int "Minimum stack size for threads"
-                default 4096
-                range 2048 999999999
-                ---help---
-                <div><strong>TinyThreads - Minimum stack size for threads</strong></div>
-                <div>&nbsp;</div>
-                <div>The minimum size for threads in bytes.</div>
-                ---endhelp---
+        ifblock TTHREAD_HAS_SRS
 
-            config TTHREAD_THREAD_SAFE_NEWLIB
-                bool "Require thread safe C library"
-                default y
-                ---help---
-                <div><strong>TinyThreads - Require thread safe C library</strong></div>
-                <div>&nbsp;</div>
-                <div>This enables switching reentrant structure.</div>
-                ---endhelp---
-
-            config TTHREAD_ENABLE_ASSERTION
-                bool "Enable assertion check"
+            config TTHREAD_ENABLE_SRS
+                bool "Use shadow register set to store contexts"
                 default n
                 ---help---
-                <div><strong>TinyThreads - Enable assertion check</strong></div>
+                <div><strong>TinyThreads - Use shadow register set to store contexts</strong></div>
                 <div>&nbsp;</div>
-                <div>Insert assertion check logic for debugging.</div>
+                <div>Use shadow register sets.</div>
                 ---endhelp---
 
-            config TTHREAD_ENABLE_WAIT_IN_IDLE
-                bool "Issue WAIT instruction in idle thread"
-                default y
+        endif
+
+        ifblock TTHREAD_HAS_FPU
+
+            config TTHREAD_FPU_DELAYED_SWITCH
+                bool "Enable delayed switch for FPU registers"
+                default n
                 ---help---
-                <div><strong>TinyThreads - Issue WAIT instruction in idle thread</strong></div>
+                <div><strong>TinyThreads - Enable delayed switch for FPU registers</strong></div>
                 <div>&nbsp;</div>
-                <div>Issue WAIT instruction in idle thread to reduce power consumption.</div>
+                <div>Switch FPU context only if each thread uses FPU instructions.</div>
                 ---endhelp---
 
-            ifblock TTHREAD_HAS_SRS
+            config TTHREAD_FPU_DISALLOW_IN_ISR
+                bool "Disallow FPU usage in ISR"
+                default n
+                ---help---
+                <div><strong>TinyThreads - Disallow FPU usage in ISR</strong></div>
+                <div>&nbsp;</div>
+                <div>Disallow FPU instructions in ISR context. If enabled, FPU instructions in ISR will cause an exception.</div>
+                ---endhelp---
 
-                config TTHREAD_ENABLE_SRS
-                    bool "Use shadow register set to store contexts"
-                    default n
-                    ---help---
-                    <div><strong>TinyThreads - Use shadow register set to store contexts</strong></div>
-                    <div>&nbsp;</div>
-                    <div>Use shadow register sets.</div>
-                    ---endhelp---
+        endif
 
-            endif
+        ifblock TTHREAD_HAS_DSP
 
-            ifblock TTHREAD_HAS_FPU
+            config TTHREAD_DSP_DELAYED_SWITCH
+                bool "Enable delayed switch for DSP registers"
+                default n
+                ---help---
+                <div><strong>TinyThreads - Enable delayed switch for DSP registers</strong></div>
+                <div>&nbsp;</div>
+                <div>Switch DSP context only if each thread uses DSP instructions.</div>
+                ---endhelp---
 
-                config TTHREAD_FPU_DELAYED_SWITCH
-                    bool "Enable delayed switch for FPU registers"
-                    default n
-                    ---help---
-                    <div><strong>TinyThreads - Enable delayed switch for FPU registers</strong></div>
-                    <div>&nbsp;</div>
-                    <div>Switch FPU context only if each thread uses FPU instructions.</div>
-                    ---endhelp---
+            config TTHREAD_DSP_DISALLOW_IN_ISR
+                bool "Disallow DSP usage in ISR"
+                default n
+                ---help---
+                <div><strong>TinyThreads - Disallow DSP usage in ISR</strong></div>
+                <div>&nbsp;</div>
+                <div>Disallow DSP instructions in ISR context. If enabled, DSP instructions in ISR will cause an exception.</div>
+                ---endhelp---
 
-                config TTHREAD_FPU_DISALLOW_IN_ISR
-                    bool "Disallow FPU usage in ISR"
-                    default n
-                    ---help---
-                    <div><strong>TinyThreads - Disallow FPU usage in ISR</strong></div>
-                    <div>&nbsp;</div>
-                    <div>Disallow FPU instructions in ISR context. If enabled, FPU instructions in ISR will cause an exception.</div>
-                    ---endhelp---
+        endif
 
-            endif
-
-            ifblock TTHREAD_HAS_DSP
-
-                config TTHREAD_DSP_DELAYED_SWITCH
-                    bool "Enable delayed switch for DSP registers"
-                    default n
-                    ---help---
-                    <div><strong>TinyThreads - Enable delayed switch for DSP registers</strong></div>
-                    <div>&nbsp;</div>
-                    <div>Switch DSP context only if each thread uses DSP instructions.</div>
-                    ---endhelp---
-
-                config TTHREAD_DSP_DISALLOW_IN_ISR
-                    bool "Disallow DSP usage in ISR"
-                    default n
-                    ---help---
-                    <div><strong>TinyThreads - Disallow DSP usage in ISR</strong></div>
-                    <div>&nbsp;</div>
-                    <div>Disallow DSP instructions in ISR context. If enabled, DSP instructions in ISR will cause an exception.</div>
-                    ---endhelp---
-
-            endif
-
-        endmenu
     endmenu
+endmenu
+
+ifblock USE_3RDPARTY_TINYTHREADS
 
     template TTHREAD_CONFIG_H "$HARMONY_VERSION_PATH/third_party/tinythreads/templates/tth_config.h.ftl" to "$PROJECT_HEADER_FILES/app/system_config/$CONFIGURATION/tth_config.h"
 
