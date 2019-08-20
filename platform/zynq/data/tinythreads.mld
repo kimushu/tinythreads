@@ -1,0 +1,45 @@
+OPTION psf_version = 2.1.0;
+
+BEGIN OS tinythreads
+
+OPTION DRC = tinythreads_drc;
+OPTION supported_peripherals = (ps7_cortexa9);
+OPTION COPYFILES = all;
+OPTION NAME = tinythreads;
+OPTION VERSION = 1.5;
+OPTION DEPENDS = (standalone_v6_8);
+OPTION APP_LINKER_FLAGS = "-Wl,--start-group,-lxil,-ltinythreads,-lgcc,-lc,--end-group";
+OPTION DESC = "POSIX-compatible tiny multi-threading library";
+
+BEGIN CATEGORY features
+    PARAM name = features, type = bool, default = true, desc = "Parameters to enable/disable features", permit = none;
+    PARAM name = enable_cond, type = bool, default = true, desc = "Enable pthread_cond*() APIs";
+    PARAM name = enable_mutex, type = bool, default = true, desc = "Enable pthread_mutex*() APIs";
+    PARAM name = enable_sem, type = bool, default = true, desc = "Enable sem_*() APIs";
+    PARAM name = enable_once, type = bool, default = true, desc = "Enable pthread_once*() APIs";
+    PARAM name = enable_rwlock, type = bool, default = true, desc = "Enable pthread_rwlock*() APIs";
+    PARAM name = enable_spin, type = bool, default = true, desc = "Enable pthread_spin*() APIs";
+    PARAM name = enable_sleep, type = bool, default = true, desc = "Enable sleep()/usleep() APIs";
+    PARAM name = enable_clock, type = bool, default = true, desc = "Enable clock_*() APIs";
+    PARAM name = enable_profile, type = bool, default = false, desc = "Enable internal profiling (Switch counter)";
+    PARAM name = enable_name, type = bool, default = false, desc = "Enable thread name for debugging";
+END CATEGORY
+
+BEGIN CATEGORY scheduling
+    PARAM name = scheduling, type = bool, default = true, desc = "Parameters related to scheduling", permit = none;
+    PARAM name = preemption_enabled, type = bool, default = true, desc = "Enable preemption based on system tick";
+    PARAM name = preemption_interval, type = int, default = 10, desc = "Interval of preemption (in milliseconds)";
+    PARAM name = priority_max, type = int, default = 99, desc = "Maximum priority value (1~255)";
+    PARAM name = priority_min, type = int, default = 1, desc = "Minimum priority value (1~255)";
+    PARAM name = priority_default, type = int, default = 10, desc = "Default priority value";
+    PARAM name = policy_default_fifo, type = bool, default = false, desc = "Use FIFO policy (SCHED_FF) by default. If disabled, round-robin policy (SCHED_RR) is used by default.";
+END CATEGORY
+
+BEGIN CATEGORY others
+    PARAM name = others, type = bool, default = true, desc = "Advanced parameters", permit = none;
+    PARAM name = min_stack_size, type = int, default = 0x1000, desc = "Minimum stack size for threads";
+    PARAM name = thread_safe_newlib, type = bool, default = true, desc = "Require thread safe C library";
+    PARAM name = strict_check, type = bool, default = false, desc = "Enable strict integrity check";
+END CATEGORY
+
+END OS

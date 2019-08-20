@@ -5,6 +5,8 @@
 # include <priv/tth_arch_nios2.h>
 #elif defined(__PIC32M__)
 # include <priv/tth_arch_pic32m.h>
+#elif defined(__ARM_ARCH_7A__)
+# include <priv/tth_arch_armv7a.h>
 #else
 # error "Unsupported architecture"
 #endif

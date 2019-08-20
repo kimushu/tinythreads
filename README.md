@@ -5,7 +5,8 @@ TinyThreads is POSIX threads (pthreads) compatible tiny multi-threading library 
 Currently, following processors are supported:
 
 * Intel(Altera) Nios II
-* Microchip PIC32 (MIPS32 Architecture)
+* Xilinx Zynq-7000 (Cortex-A9)
+* ~~Microchip PIC32 (MIPS32 Architecture)~~
 
 ## マニュアル / Manuals
 

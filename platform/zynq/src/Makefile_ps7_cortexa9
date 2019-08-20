@@ -1,0 +1,38 @@
+ARCH = ps7_cortexa9
+ARCH_PREFIX = arm-none-eabi-
+SYSTEMDIR = ../../..
+TOPDIR = .
+
+CFLAGS = $(COMPILER_FLAGS) $(EXTRA_COMPILER_FLAGS)
+
+SOURCES = tth_attr.c tth_cond.c tth_mutex.c tth_once.c tth_sched.c tth_sem.c tth_sleep.c tth_thread.c tth_arch_ps7_cortexa9.c tth_arch_ps7_cortexa9_asm.S
+OBJECTS = $(addsuffix .o,$(basename $(SOURCES)))
+
+LIBDIR = $(SYSTEMDIR)/lib
+INCLUDEDIR = $(SYSTEMDIR)/include
+
+INCLUDEFILES = pthread.h sched.h semaphore.h tthread.h
+
+INCLUDES = -I$(INCLUDEDIR) -I$(TOPDIR)
+
+LIBTINYTHREADS = $(LIBDIR)/libtinythreads.a
+LIBXIL = $(LIBDIR)/libxil.a
+
+STANDALONEDIR = $(wildcard ../../standalone_*)
+STANDALONEMAKE = $(MAKE) -C $(STANDALONEDIR)/src -f Makefile_depends -e \
+	"COMPILER_FLAGS=$(COMPILER_FLAGS)" "EXTRA_COMPILER_FLAGS=$(EXTRA_COMPILER_FLAGS)"
+
+libs: $(SOURCES)
+	$(STANDALONEMAKE) $@
+	@echo "Compiling TinyThreads"
+	@$(COMPILER) $(COMPILER_FLAGS) $(EXTRA_COMPILER_FLAGS) -D__PS7_CORTEXA9__=1 $(INCLUDES) $^
+	@$(ARCHIVER) -r $(LIBTINYTHREADS) $(OBJECTS)
+	@$(ARCHIVER) -d $(LIBXIL) asm_vectors.o
+	@$(ARCHIVER) -s $(LIBXIL)
+
+include:
+	$(STANDALONEMAKE) $@
+	cp -rf $(INCLUDEFILES) $(INCLUDEDIR)
+
+clean:
+	rm -rf $(OBJECTS)
