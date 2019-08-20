@@ -1,0 +1,3 @@
+rsync -a $SRC_DIR/ TINYTH/src/
+rsync -a $INC_DIR/ TINYTH/inc/
+rsync -a $DOCS ./
