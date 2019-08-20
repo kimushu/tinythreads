@@ -6,7 +6,7 @@ export SRC_DIR=$top/src
 export INC_DIR=$top/include
 export DOCS="$top/README.md $top/LICENSE"
 mkdir -p $ddir
-tag=$(git describe --always --dirty)
+tag=$(git describe --always --tags --dirty)
 for pack in platform/*/.pack; do
 	pdir=$(dirname $pack)
 	name=$(basename $pdir)
