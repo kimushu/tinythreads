@@ -287,6 +287,8 @@ int pthread_setname_np(pthread_t thread, const char *name)
   memcpy(target->name, name, name_len + 1);
   return 0;
 #else   /* !TTHREAD_ENABLE_NAME */
+  (void)thread;
+  (void)name;
   return ENOTSUP;
 #endif  /* !TTHREAD_ENABLE_NAME */
 }
@@ -307,6 +309,9 @@ int pthread_getname_np(pthread_t thread, char *name, size_t len)
   memcpy(name, target->name, name_len);
   return 0;
 #else   /* !TTHREAD_ENABLE_NAME */
+  (void)thread;
+  (void)name;
+  (void)len;
   return ENOTSUP;
 #endif  /* !TTHREAD_ENABLE_NAME */
 }

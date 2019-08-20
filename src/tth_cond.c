@@ -12,6 +12,7 @@
  */
 int pthread_cond_destroy(pthread_cond_t *cond)
 {
+  (void)cond;
   return 0;
 }
 
