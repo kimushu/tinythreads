@@ -40,6 +40,7 @@ BEGIN CATEGORY others
     PARAM name = min_stack_size, type = int, default = 0x1000, desc = "Minimum stack size for threads";
     PARAM name = thread_safe_newlib, type = bool, default = true, desc = "Require thread safe C library";
     PARAM name = strict_check, type = bool, default = false, desc = "Enable strict integrity check";
+    PARAM name = enable_vfp_switch, type = bool, default = false, desc = "Enable VFP context switch";
 END CATEGORY
 
 END OS

@@ -90,6 +90,7 @@ proc generate {os_handle} {
 	puts $fd "#define PTHREAD_STACK_MIN_OVERRIDE  ([common::get_property CONFIG.min_stack_size $os_handle])"
 	puts $fd "#define TTHREAD_THREAD_SAFE_NEWLIB  [bool2int [common::get_property CONFIG.thread_safe_newlib $os_handle]]"
 	puts $fd "#define TTHREAD_STRICT_CHECK        [bool2int [common::get_property CONFIG.strict_check $os_handle]]"
+	puts $fd "#define TTHREAD_ENABLE_VFP_SWITCH   [bool2int [common::get_property CONFIG.enable_vfp_switch $os_handle]]"
 
 	puts $fd "#define TTHREAD_TICKS_PER_SEC       (1000)"
 	close $fd
