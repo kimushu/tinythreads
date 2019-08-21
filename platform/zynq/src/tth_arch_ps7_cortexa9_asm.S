@@ -241,9 +241,6 @@ TinyThreads_IRQHandler:
     biceq   r2, r2, #0x40000000
     vmsreq  fpexc, r2           /* Disable VFP (If level == 0) */
 #endif
-    cpsie   i                   /* Permit IRQ reentry */
-    dsb
-    isb
     stmdb   sp!, {r4,r12}       /* Save r4 and r12 */
     mov     r4, sp              /* Save sp to r4 */
     bic     sp, sp, #4          /* Align sp to 8-byte boundary */
