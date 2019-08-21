@@ -99,9 +99,9 @@ TinyThreads_UndefinedHandler:
     ldr     r1, [r3]
     cmp     r0, r1
     beq     .Lvfp_continue
+    mov     r12, sp
     cmp     r0, #0
     beq     .Lvfp_restore
-    mov     r12, sp
     vmrs    r3, fpscr
     add     sp, r0, #332
     str     r3, [sp, #-4]!
