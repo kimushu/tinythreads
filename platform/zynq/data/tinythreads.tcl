@@ -12,7 +12,7 @@ proc generate {os_handle} {
 	set basedir "../$standalone_version/src"
 
 	proc copy_files {from to} {
-		foreach item [glob -nocomplain [file join $from *]] {
+		foreach item [glob -nocomplain -type f [file join $from *]] {
 			file copy -force $item $to
 		}
 	}
@@ -41,9 +41,7 @@ proc generate {os_handle} {
 	}
 
 	# Remove unnecessary processor dependent files
-	file delete -force "$basedir/arm/cortexa53"
-	file delete -force "$basedir/arm/cortexa9"
-	file delete -force "$basedir/arm/cortexr5"
+	file delete -force "$basedir/arm"
 	file delete -force "$basedir/microblaze"
 
 	# Generate config.make
