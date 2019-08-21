@@ -112,6 +112,21 @@ proc generate {os_handle} {
 	puts $fd "#define TTHREAD_STRICT_CHECK        [bool2int [common::get_property CONFIG.strict_check $os_handle]]"
 	puts $fd "#define TTHREAD_ENABLE_VFP_SWITCH   [bool2int [common::get_property CONFIG.enable_vfp_switch $os_handle]]"
 	puts $fd "#define TTHREAD_TICKS_PER_SEC       ([common::get_property CONFIG.ticks_per_second $os_handle])"
+	puts $fd ""
+	if { [common::get_property CONFIG.enable_clock $os_handle] == "true" } {
+		puts $fd "#define _POSIX_TIMERS	              /* For clock_gettime,clock_getres in <time.h> */"
+		puts $fd "#define _POSIX_MONOTONIC_CLOCK      /* For CLOCK_MONOTONIC in <time.h> */"
+	}
+	puts $fd ""
+	puts $fd "#ifndef __ASSEMBLER__"
+	puts $fd "#ifdef __cplusplus"
+	puts $fd "extern \"C\" {"
+	puts $fd "#endif"
+	puts $fd "extern void *tth_get_xscugic_instance(void);"
+	puts $fd "#ifdef __cplusplus"
+	puts $fd "} /* extern \"C\" */"
+	puts $fd "#endif"
+	puts $fd "#endif  /* __ASSEMBLER__ */"
 	close $fd
 
 }
