@@ -4,6 +4,7 @@
 #include <stdint.h>
 #if defined(__PS7_CORTEXA9__)
 # include <bspconfig.h>
+# define _POSIX_MONOTONIC_CLOCK
 #else
 # error "Unknown platform for ARMv7-A ports."
 #endif

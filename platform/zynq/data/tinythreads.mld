@@ -33,6 +33,7 @@ BEGIN CATEGORY scheduling
     PARAM name = priority_min, type = int, default = 1, desc = "Minimum priority value (1~255)";
     PARAM name = priority_default, type = int, default = 10, desc = "Default priority value";
     PARAM name = policy_default_fifo, type = bool, default = false, desc = "Use FIFO policy (SCHED_FF) by default. If disabled, round-robin policy (SCHED_RR) is used by default.";
+    PARAM name = ticks_per_second, type = int, default = 1000, desc = "Number of ticks per second";
 END CATEGORY
 
 BEGIN CATEGORY others
