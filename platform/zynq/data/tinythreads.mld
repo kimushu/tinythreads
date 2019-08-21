@@ -11,6 +11,9 @@ OPTION DEPENDS = (standalone_v6_8);
 OPTION APP_LINKER_FLAGS = "-Wl,--start-group,-lxil,-ltinythreads,-lgcc,-lc,--end-group";
 OPTION DESC = "POSIX-compatible tiny multi-threading library";
 
+PARAM name = stdin, desc = "stdin peripheral", type = peripheral_instance, requires_interface = stdin, default=none, range = (ps7_uart, psu_uart, ps7_coresight_comp, psu_coresight_0, iomodule, axi_uartlite, axi_uart16550, mdm);
+PARAM name = stdout, desc = "stdout peripheral", type = peripheral_instance, requires_interface = stdout, default=none, range = (ps7_uart, psu_uart, ps7_coresight_comp, psu_coresight_0, iomodule, axi_uartlite, axi_uart16550, mdm);
+
 BEGIN CATEGORY features
     PARAM name = features, type = bool, default = true, desc = "Parameters to enable/disable features", permit = none;
     PARAM name = enable_cond, type = bool, default = true, desc = "Enable pthread_cond*() APIs";
