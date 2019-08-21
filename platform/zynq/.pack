@@ -1,3 +1,8 @@
-rsync -a $SRC_DIR/ src/
-rsync -a $INC_DIR/ src/
-rsync -a $DOCS ./
+# Packaging script for Zynq platform
+VER=$(sed -ne 's/^OPTION VERSION = \([0-9]\+\)\.\([0-9]\+\);$/v\1_\2/p' data/tinythreads.mld)
+OUT=$DEST_DIR/tinythreads_$VER
+mkdir $OUT
+rsync -a ./ $OUT/
+rsync -a $SRC_DIR/ $OUT/src/
+rsync -a $INC_DIR/ $OUT/src/
+rsync -a $DOCS $OUT/
