@@ -26,12 +26,13 @@ typedef struct
   uint32_t r0, r1, r2, r3;    /* 48 */
   uint32_t pc;                /* 64 */
   void *reent;                /* 68 */
+  void *tpid;                 /* 72 */
 #if (TTHREAD_ENABLE_VFP_SWITCH != 0)
-  uint64_t vreg[32];          /* 72 */
-  uint32_t fpscr;             /* 328 */
+  uint32_t fpscr;             /* 76 */
+  uint64_t vfpreg[32];        /* 80 */
 #endif
 #if (TTHREAD_ENABLE_PROF != 0)
-  unsigned switches;          /* 332(vfp), 72(non-vfp) */
+  unsigned switches;          /* 336(vfp), 76(non-vfp) */
 #endif
 }
 tth_arch_context;

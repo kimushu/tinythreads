@@ -3,6 +3,8 @@
 #include "xscugic.h"
 #include "xscutimer.h"
 #include "xil_exception.h"
+#include <malloc.h>
+#include <string.h>
 
 extern void tth_int_tick(void);
 
@@ -25,6 +27,33 @@ void tth_arch_auto_start(void)
   tth_initialize();
 }
 
+void *tth_arch_init_tls(tth_thread *thread, void* bottom)
+{
+  extern char __tdata_start[];
+  extern char __tdata_end[];
+  extern char __tbss_start[];
+  extern char __tbss_end[];
+  (void)thread;
+  size_t tdata_size = ((__tdata_end - __tdata_start) + 3u) & ~3u;
+  size_t tbss_size = ((__tbss_end - __tbss_start) + 3u) & ~3u;
+  size_t tls_size = tdata_size + tbss_size + 8;
+  char *tls;
+  if (tls_size == 8) {
+    return NULL;
+  } else if (bottom) {
+    tls = (char *)bottom - tls_size;
+  } else {
+    tls = (char *)malloc(tls_size);
+    if (!tls) {
+      tth_arch_crash();
+    }
+  }
+  *(uint32_t *)(tls + 0) = *(uint32_t *)(tls + 4) = 0xdeadbeef;
+  memcpy(tls + 8, __tdata_start, tdata_size);
+  memset(tls + 8 + tdata_size, 0, tbss_size);
+  return tls;
+}
+
 void tth_arch_initialize(void)
 {
 #if (TTHREAD_ENABLE_VFP_SWITCH)
@@ -38,6 +67,10 @@ void tth_arch_initialize(void)
     /* Processor mode must be SYSTEM mode */
     tth_arch_crash();
   }
+
+  /* Initialize tdata+tbss for default thread */
+  tth_running->context.tpid = tth_arch_init_tls(tth_running, NULL);
+  __asm volatile("mcr p15, 0, %0, c13, c0, 3":: "r"(tth_running->context.tpid): "memory");
 
   /* Setup GIC */
   XScuGic_Config *gic_config = XScuGic_LookupConfig(XPAR_SCUGIC_SINGLE_DEVICE_ID);

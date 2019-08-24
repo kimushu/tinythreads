@@ -11,12 +11,19 @@
 .set UND_MODE, 0x1b
 .set SYS_MODE, 0x1f
 
-#if (TTHREAD_ENABLE_PROF)
-# if (TTHREAD_ENABLE_VFP_SWITCH)
-.set OFF_SWITCHES, 332
-# else
-.set OFF_SWITCHES, 72
-# endif
+.set OFF_R4_R12,    0
+.set OFF_SP,        36
+.set OFF_LR,        40
+.set OFF_PSR,       44
+.set OFF_R0_R3,     48
+.set OFF_PC,        64
+.set OFF_TPID,      72
+#if (TTHREAD_ENABLE_VFP_SWITCH)
+.set OFF_FPSCR,     76
+.set OFF_VFPREG,    80
+.set OFF_SWITCHES,  336
+#else
+.set OFF_SWITCHES,  76
 #endif
 
 .org 0
@@ -103,20 +110,20 @@ TinyThreads_UndefinedHandler:
     cmp     r0, #0
     beq     .Lvfp_restore
     vmrs    r3, fpscr
-    add     sp, r0, #332
-    str     r3, [sp, #-4]!
+    add     sp, r0, #OFF_VFPREG
     vpush   {d16-d31}
     vpush   {d0-d15}
+    str     r3, [r0, #OFF_FPSCR]
 
 .Lvfp_restore:
     /* ==== Restore new thread's VFP context ==== */
     str     r1, [r2]
-    add     sp, r1, #72
+    add     sp, r1, #OFF_VFPREG
+    ldr     r3, [r1, #OFF_FPSCR]
     vpop    {d0-d15}
     vpop    {d16-d31}
-    ldr     r3, [sp], #4
-    mov     sp, r12
     vmsr    fpscr, r3
+    mov     sp, r12
 
 .Lvfp_continue:
     ldmia   sp!, {r0-r3,r12,pc}^
@@ -175,7 +182,9 @@ TinyThreads_SVCHandler:
 
     /* ==== Restore new thread's context ==== */
     str     r0, [r3]            /* Update tth_running */
+    ldr     r1, [r0, #OFF_TPID] /* Load TPID */
     ldmia   r0!, {r4-r12}       /* Restore r4-r12 */
+    mcr     p15, 0, r1, c13, c0, 3  /* Update TPIDRURO */
     cps     #SYS_MODE
     ldmia   r0!, {sp,lr}        /* SYS mode: Restore SP_sys and LR_sys */
     cps     #SVC_MODE
@@ -307,7 +316,9 @@ TinyThreads_IRQHandler:
 
     /* ==== Restore new thread's context ==== */
     str     r0, [r3]            /* Update tth_running */
+    ldr     r1, [r0, #OFF_TPID] /* Load TPID */
     ldmia   r0!, {r4-r12}       /* Restore r4-r12 */
+    mcr     p15, 0, r1, c13, c0, 3  /* Update TPIDRURO */
     cps     #SYS_MODE
     ldmia   r0!, {sp,lr}        /* SYS mode: Restore SP_sys and LR_sys */
     cps     #IRQ_MODE
@@ -343,29 +354,33 @@ tth_arch_init_context:
     /* r1: void *stack_bottom */
     /* r2: void *start_routine */
     /* r3: void *arg */
-    str     r1, [r0, #36]       /* sp      = stack_bottom */
-    ldr     r1, =pthread_exit
-    str     r2, [r0, #64]       /* pc      = start_routine */
-    str     r1, [r0, #40]       /* lr      = pthread_exit */
+    stmdb   sp!, {r4,lr}
+    str     r2, [r0, #OFF_PC]       /* pc      = start_routine */
+    ldr     r2, =pthread_exit
+    str     r2, [r0, #OFF_LR]       /* lr      = pthread_exit */
+    str     r3, [r0, #OFF_R0_R3]    /* r0      = arg */
+    mov     r4, r0
+    bl      tth_arch_init_tls
     ldr     r1, =0xdeadbeef
-    str     r3, [r0, #48]       /* r0      = arg */
+    str     r0, [r4, #OFF_SP]       /* sp      = stack_bottom */
+    str     r0, [r4, #OFF_TPID]     /* tpid    = stack_bottom */
     mov     r2, r1
     mov     r3, r1
-    stmia   r0!, {r1-r3}        /* r4-r6   = 0xdeadbeef */
-    stmia   r0!, {r1-r3}        /* r7-r9   = 0xdeadbeef */
-    stmia   r0!, {r1-r3}        /* r10-r12 = 0xdeadbeef */
-    add     r0, r0, #16         /* Skip sp,lr,psr,r0 field */
-    stmia   r0!, {r1-r3}        /* r1-r3   = 0xdeadbeef */
+    stmia   r4!, {r1-r3}            /* r4-r6   = 0xdeadbeef */
+    stmia   r4!, {r1-r3}            /* r7-r9   = 0xdeadbeef */
+    stmia   r4!, {r1-r3}            /* r10-r12 = 0xdeadbeef */
+    add     r4, r4, #(OFF_R0_R3-OFF_SP+4)
+    stmia   r4!, {r1-r3}            /* r1-r3   = 0xdeadbeef */
     mrs     r1, apsr
-    str     r1, [r0, #-20]      /* psr     = apsr */
+    str     r1, [r4, #(OFF_PSR-OFF_PC)] /* psr = apsr */
 #if (TTHREAD_ENABLE_VFP_SWITCH)
-    add     r0, r0, #8          /* @vreg[0] */
+    add     r4, r4, #(OFF_VFPREG-OFF_PC)
     mov     r1, #16
 .Lvfp_init_loop:
-    stmia   r0!, {r2-r3}
-    stmia   r0!, {r2-r3}
+    stmia   r4!, {r2-r3}    /* d[2n+0] = 0xdeadbeefdeadbeef */
+    stmia   r4!, {r2-r3}    /* d[2n+1] = 0xdeadbeefdeadbeef */
     subs    r1, r1, #1
     bne     .Lvfp_init_loop
-    str     r1, [r0]            /* fpscr   = 0 */
+    str     r1, [r4, #(OFF_FPSCR-OFF_SWITCHES)] /* fpscr = 0 */
 #endif
-    bx      lr
+    ldmia   sp!, {r4,pc}
