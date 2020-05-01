@@ -1,11 +1,12 @@
 TTH_ROOT = ../../../
 Q ?= @
-GIT_TAG := $(shell git describe --tags)
+VERSION := $(shell sed -ne "s/set_sw_property version //p" tinythreads_sw.tcl)
+ARCHIVE = dist/tinythreads-nios2-v$(VERSION).tar.gz
 
 .PHONY: dist
-dist: dist/tinythreads-nios2-$(GIT_TAG).tar.gz
+dist: $(ARCHIVE)
 
-dist/tinythreads-$(GIT_TAG).tar.gz: dist/tinythreads
+$(ARCHIVE): dist/tinythreads
 	@echo "## Making archive ..."
 	$(Q)tar -czf $@ -C $(<D) $(<F)
 
