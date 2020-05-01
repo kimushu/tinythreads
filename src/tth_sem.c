@@ -117,7 +117,8 @@ int sem_trywait(sem_t *sem)
   }
   else
   {
-    result = EAGAIN;
+    errno = EAGAIN;
+    result = -1;
   }
 
   tth_arch_cs_end(lock);
