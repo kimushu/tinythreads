@@ -1,8 +1,12 @@
 proc create_os_ticks_per_sec_macro {} {
     set enable_sleep [ get_setting tinyth.feature.enable_sleep ]
-    set preemp_enable [ get_setting tinyth.scheduling.preemption.enabled ]
+    set preempt_enable [ get_setting tinyth.scheduling.preemption.enabled ]
 
-    if { ($enable_sleep == "true") || ($preemp_enable == "true") } {
+    if { ($enable_sleep) } {
+        add_systemh_line TINYTH _POSIX_MONOTONIC_CLOCK 1
+    }
+
+    if { ($enable_sleep) || ($preempt_enable) } {
         set timer_name [ string toupper [ get_setting hal.sys_clk_timer ] ]
 
         if { $timer_name == "NONE" } {
