@@ -380,6 +380,10 @@ tth_arch_init_context:
     /* r7: arg */
 
 #ifdef TTHREAD_USE_SRS
+    /* Allocate initial stack */
+    subi    r5, r5, 8   /* stack_bottom - 8 */
+    stw     r5, 0(r4)
+
     /* Allocate free shadow register set */
     subi    sp, sp, 16
     /* r4 is not saved because it is not used after */
@@ -412,9 +416,8 @@ tth_arch_init_context:
     or      r1, r3, r1
 
     /* Construct initial stack */
-    subi    r2, r5, 8   /* stack_bottom - 8 */
-    stw     r1, 0(r2)   /* estatus */
-    stw     r6, 4(r2)   /* start_routine */
+    stw     r1, 0(r5)   /* estatus */
+    stw     r6, 4(r5)   /* start_routine */
 
     /* Initialize registers */
     movhi   r1, 0xdead
@@ -456,14 +459,18 @@ tth_arch_init_context:
 
     /* Restore status.PRS and status.PIE */
     wrctl   status, r4
+    movui   r2, 1
 1:
     ret
 #else   /* !TTHREAD_USE_SRS */
+    /* Allocate initial stack */
+    subi    r2, r5, 112 /* stack_bottom - 112 */
+    stw     r2, 0(r4)
+
     /* Read status */
     rdctl   r4, status
 
     /* Construct initial stack */
-    subi    r2, r5, 112 /* stack_bottom - 112 */
     movhi   r1, 0xdead
     ori     r1, r1, 0xbeef
     movhi   r3, %hi(tth_arch_exit_guard)
