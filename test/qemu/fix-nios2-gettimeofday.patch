@@ -1,0 +1,21 @@
+--- a/target/nios2/nios2-semi.c	2019-12-13 03:20:48.000000000 +0900
++++ b/target/nios2/nios2-semi.c	2020-04-27 18:10:33.153120663 +0900
+@@ -403,15 +403,15 @@
+             qemu_timeval tv;
+             struct gdb_timeval *p;
+             result = qemu_gettimeofday(&tv);
+-            if (result != 0) {
++            if (result == 0) {
+                 p = lock_user(VERIFY_WRITE, arg0, sizeof(struct gdb_timeval),
+                               0);
+                 if (!p) {
+                     result = -1;
+                     errno = EFAULT;
+                 } else {
+-                    p->tv_sec = cpu_to_be32(tv.tv_sec);
+-                    p->tv_usec = cpu_to_be64(tv.tv_usec);
++                    p->tv_sec = cpu_to_le32(tv.tv_sec);
++                    p->tv_usec = cpu_to_le64(tv.tv_usec);
+                     unlock_user(p, arg0, sizeof(struct gdb_timeval));
+                 }
+             }
