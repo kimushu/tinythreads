@@ -14,7 +14,7 @@ $(ARCHIVE): dist/tinythreads
 dist/tinythreads:
 	@echo "## Packing ..."
 	$(Q)mkdir -p $@/TINYTH/
-	$(Q)rsync -crlp $(TTH_ROOT)/*.md $@/
+	$(Q)rsync -crlp $(TTH_ROOT)/*.md $(TTH_ROOT)/LICENSE $@/
 	$(Q)rsync -crlp $(TTH_ROOT)/src/ $@/TINYTH/src/
 	$(Q)rsync -crlp $(TTH_ROOT)/include/ $@/TINYTH/inc/
 	$(Q)rsync -crlp ./*.md ./*.tcl $@/
