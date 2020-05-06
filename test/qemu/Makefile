@@ -1,5 +1,5 @@
 QEMU_VER = 4.2.0
-TARGETS = nios2 arm
+TARGETS = nios2 arm riscv32
 PATCHES = fix-nios2-gettimeofday
 EXEC = $(foreach t,$(TARGETS),build/$(t)-softmmu/qemu-system-$(t))
 V ?= 0
@@ -26,7 +26,7 @@ qemu-$(QEMU_VER)/patched-%: %.patch qemu-$(QEMU_VER)/configure
 	$(Q)patch -d $(@D) -p1 -s < $<
 	$(Q)touch $@
 
-build/Makefile: qemu-$(QEMU_VER)/configure \
+build/Makefile: qemu-$(QEMU_VER)/configure $(MAKEFILE_LIST) \
 	$(addprefix qemu-$(QEMU_VER)/patched-,$(PATCHES))
 	@echo "#================================================================"
 	@echo "# Executing configure"
