@@ -5,7 +5,16 @@
 __asm(
   ".section .reset, \"ax\"\n"
   ".global reset\n"
-  "reset:\n"
-  "li a5,0x12345678\n"
-  "j ."
+"reset:\n"
+  // Initialize stack pointer
+  "la     sp, __stack_end\n"
+  // Jump to C start rontine
+  "j      start\n"
 );
+
+// (2) Test
+void start(void)
+{
+  SEMI_PRINT("== start\n");
+  for (;;);
+}

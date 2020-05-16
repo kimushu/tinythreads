@@ -1,13 +1,15 @@
 QEMU_DIR = ../../../test/qemu
 QEMU_BIN = $(QEMU_DIR)/build/riscv32-softmmu/qemu-system-riscv32
 QEMU_OPT = -M virt -cpu rv32imacu-nommu -nographic \
-	-serial null -monitor $(QEMU_MON) # -semihosting
+	-serial $(QEMU_SERIAL) -monitor $(QEMU_MON) # -semihosting
 QEMU_MON ?= null
+QEMU_SERIAL ?= null
 CROSS_COMPILE = riscv64-unknown-elf-
 TARGETS = rv32imac_nofpu
 Q ?= @
 
 .PHONY: run
+run: QEMU_SERIAL = stdio
 run: $(addsuffix .validate,$(TARGETS))
 
 .PHONY: %.out
@@ -49,7 +51,7 @@ gdb: $(firstword $(TARGET) $(TARGETS)).elf
 	@echo "## Generating list of $< ..."
 	$(Q)$(CROSS_COMPILE)objdump -dtr $< > $@ || (rm -f $@; false)
 
-rv32imac_%.elf: rv32imac_%.c qemu-riscv.ld
+rv32imac_%.elf: rv32imac_%.c qemu-riscv.ld utils.h
 	@echo "## Compiling $< ..."
 	$(Q)$(CROSS_COMPILE)gcc -o $@ -Wall -Wl,-T,$(filter %.ld,$^) \
 		-march=rv32imac -mabi=ilp32 \
