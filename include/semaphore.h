@@ -5,18 +5,14 @@
 extern "C" {
 #endif
 
-#define SEM_VALUE_MAX   32767
+#define SEM_VALUE_MAX 32767
 
-typedef struct
-{
-  struct
-  {
+typedef struct {
+  struct {
     struct tth_thread *waiter;
     int value;
-  }
-  __priv;
-}
-sem_t;
+  } __priv;
+} sem_t;
 
 extern int sem_destroy(sem_t *sem);
 extern int sem_init(sem_t *sem, int pshared, unsigned int value);
@@ -29,4 +25,4 @@ extern int sem_trywait(sem_t *sem);
 } /* extern "C" */
 #endif
 
-#endif  /* __SEMAPHORE_H__ */
+#endif /* __SEMAPHORE_H__ */

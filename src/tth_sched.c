@@ -1,14 +1,12 @@
-#include <priv/tth_core.h>
 #include <errno.h>
+#include <priv/tth_core.h>
 
 /*
  * [POSIX.1-2001]
  * Get the maximum value of static priority range
  */
-int sched_get_priority_max(int policy)
-{
-  switch (policy)
-  {
+int sched_get_priority_max(int policy) {
+  switch (policy) {
   case SCHED_FIFO:
   case SCHED_RR:
     return SCHED_PRIORITY_MAX;
@@ -22,10 +20,8 @@ int sched_get_priority_max(int policy)
  * [POSIX.1-2001]
  * Get the minimum value of static priority range
  */
-int sched_get_priority_min(int policy)
-{
-  switch (policy)
-  {
+int sched_get_priority_min(int policy) {
+  switch (policy) {
   case SCHED_FIFO:
   case SCHED_RR:
     return SCHED_PRIORITY_MIN;
@@ -39,8 +35,7 @@ int sched_get_priority_min(int policy)
  * [POSIX.1-2001]
  * Yield the processor
  */
-int sched_yield(void)
-{
+int sched_yield(void) {
   int lock;
   lock = tth_arch_cs_begin();
   tth_cs_move(&tth_ready, &tth_ready, TTHREAD_WAIT_READY);

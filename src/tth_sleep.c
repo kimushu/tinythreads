@@ -1,10 +1,10 @@
 #include <priv/tth_core.h>
 #if (TTHREAD_ENABLE_SLEEP != 0)
-# include <unistd.h>
-# include <errno.h>
-# if (TTHREAD_ENABLE_CLOCK != 0)
-#  include <time.h>
-# endif
+#include <errno.h>
+#include <unistd.h>
+#if (TTHREAD_ENABLE_CLOCK != 0)
+#include <time.h>
+#endif
 
 tth_thread *tth_sleeping;
 static unsigned int tth_time;
@@ -17,15 +17,12 @@ static long tth_time_nsec;
  * [POSIX.1-2001]
  * Sleep current thread for the specified number of seconds
  */
-unsigned int sleep(unsigned int seconds)
-{
-  if (seconds == 0)
-  {
+unsigned int sleep(unsigned int seconds) {
+  if (seconds == 0) {
     sched_yield();
     return 0;
   }
-  for (; seconds > 0; --seconds)
-  {
+  for (; seconds > 0; --seconds) {
     usleep(1000000);
   }
   return 0;
@@ -35,19 +32,16 @@ unsigned int sleep(unsigned int seconds)
  * [POSIX.1-2001]
  * Sleep current thread for the specified number of microseconds
  */
-int usleep(useconds_t us)
-{
+int usleep(useconds_t us) {
   int lock;
   tth_thread *next, **to;
 
-  if (us == 0)
-  {
+  if (us == 0) {
     sched_yield();
     return 0;
   }
 
-  if (us > 1000000)
-  {
+  if (us > 1000000) {
     errno = EINVAL;
     return -1;
   }
@@ -57,10 +51,8 @@ int usleep(useconds_t us)
   tth_running->waitstate = TTHREAD_WAIT_SLEEP;
   tth_ready = tth_running->follower;
   to = &tth_sleeping;
-  while ((next = *to) != NULL)
-  {
-    if ((next->shared.timeout - tth_time) >= us)
-    {
+  while ((next = *to) != NULL) {
+    if ((next->shared.timeout - tth_time) >= us) {
       break;
     }
     to = &next->follower;
@@ -76,8 +68,7 @@ int usleep(useconds_t us)
  * [POSIX.1-2001]
  * Finds the resolution (precision) of the specified clock clk_id
  */
-int clock_getres(clockid_t clk_id, struct timespec *res)
-{
+int clock_getres(clockid_t clk_id, struct timespec *res) {
   switch (clk_id) {
   case CLOCK_MONOTONIC:
     if (res != NULL) {
@@ -94,8 +85,7 @@ int clock_getres(clockid_t clk_id, struct timespec *res)
  * [POSIX.1-2001]
  * Retrieve the time of the specified clock clk_id
  */
-int clock_gettime(clockid_t clk_id, struct timespec *tp)
-{
+int clock_gettime(clockid_t clk_id, struct timespec *tp) {
   switch (clk_id) {
   case CLOCK_MONOTONIC:
     if (tp == NULL) {
@@ -109,13 +99,12 @@ int clock_gettime(clockid_t clk_id, struct timespec *tp)
   errno = EINVAL;
   return -1;
 }
-#endif  /* TTHREAD_ENABLE_CLOCK */
+#endif /* TTHREAD_ENABLE_CLOCK */
 
 /*
  * Tick handler for sleep
  */
-void tth_sleep_tick(void)
-{
+void tth_sleep_tick(void) {
   int lock = tth_arch_cs_begin();
   tth_time += (1000000 / TTHREAD_TICKS_PER_SEC);
 
@@ -125,12 +114,10 @@ void tth_sleep_tick(void)
     tth_time_nsec -= 1000000000;
     ++tth_time_sec;
   }
-#endif  /* TTHREAD_ENABLE_CLOCK */
+#endif /* TTHREAD_ENABLE_CLOCK */
 
-  while (tth_sleeping != NULL)
-  {
-    if ((int)(tth_sleeping->shared.timeout - tth_time) > 0)
-    {
+  while (tth_sleeping != NULL) {
+    if ((int)(tth_sleeping->shared.timeout - tth_time) > 0) {
       break;
     }
 
@@ -141,4 +128,4 @@ void tth_sleep_tick(void)
   tth_arch_cs_end(lock);
 }
 
-#endif  /* TTHREAD_ENABLE_SLEEP */
+#endif /* TTHREAD_ENABLE_SLEEP */

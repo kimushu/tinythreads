@@ -6,10 +6,8 @@
  * [POSIX.1-2001]
  * Destroy a mutex
  */
-int pthread_mutex_destroy(pthread_mutex_t *mutex)
-{
-  if (mutex->__priv.waiter || mutex->__priv.owner)
-  {
+int pthread_mutex_destroy(pthread_mutex_t *mutex) {
+  if (mutex->__priv.waiter || mutex->__priv.owner) {
     return EBUSY;
   }
 
@@ -20,8 +18,8 @@ int pthread_mutex_destroy(pthread_mutex_t *mutex)
  * [POSIX.1-2001]
  * Initialize a mutex
  */
-int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr)
-{
+int pthread_mutex_init(pthread_mutex_t *mutex,
+                       const pthread_mutexattr_t *attr) {
   static const pthread_mutex_t init_mutex = PTHREAD_MUTEX_INITIALIZER;
 
   *mutex = init_mutex;
@@ -34,23 +32,17 @@ int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr)
  * [POSIX.1-2001]
  * Lock a mutex
  */
-int pthread_mutex_lock(pthread_mutex_t *mutex)
-{
+int pthread_mutex_lock(pthread_mutex_t *mutex) {
   int lock = tth_arch_cs_begin();
   int result;
 
-  if (mutex->__priv.owner == tth_running)
-  {
+  if (mutex->__priv.owner == tth_running) {
     result = EDEADLK;
-  }
-  else if (mutex->__priv.owner)
-  {
+  } else if (mutex->__priv.owner) {
     tth_cs_move(&tth_ready, &mutex->__priv.waiter, TTHREAD_WAIT_MUTEX);
     tth_arch_cs_end_switch(lock);
     return 0;
-  }
-  else
-  {
+  } else {
     mutex->__priv.owner = tth_running;
     result = 0;
   }
@@ -62,21 +54,15 @@ int pthread_mutex_lock(pthread_mutex_t *mutex)
  * [POSIX.1-2001]
  * Try to lock a mutex
  */
-int pthread_mutex_trylock(pthread_mutex_t *mutex)
-{
+int pthread_mutex_trylock(pthread_mutex_t *mutex) {
   int lock = tth_arch_cs_begin();
   int result;
 
-  if (mutex->__priv.owner == tth_running)
-  {
+  if (mutex->__priv.owner == tth_running) {
     result = EDEADLK;
-  }
-  else if (mutex->__priv.owner)
-  {
+  } else if (mutex->__priv.owner) {
     result = EBUSY;
-  }
-  else
-  {
+  } else {
     mutex->__priv.owner = tth_running;
     result = 0;
   }
@@ -88,19 +74,15 @@ int pthread_mutex_trylock(pthread_mutex_t *mutex)
  * [POSIX.1-2001]
  * Unlock a mutex
  */
-int pthread_mutex_unlock(pthread_mutex_t *mutex)
-{
+int pthread_mutex_unlock(pthread_mutex_t *mutex) {
   int lock = tth_arch_cs_begin();
   int result = tth_cs_mutex_unlock(mutex);
-  if (result == 0)
-  {
+  if (result == 0) {
     tth_arch_cs_end_switch(lock);
-  }
-  else
-  {
+  } else {
     tth_arch_cs_end(lock);
   }
   return result;
 }
 
-#endif  /* TTHREAD_ENABLE_MUTEX */
+#endif /* TTHREAD_ENABLE_MUTEX */

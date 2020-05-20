@@ -8,119 +8,94 @@
 extern "C" {
 #endif
 
-enum
-{
+enum {
   PTHREAD_CREATE_JOINABLE,
   PTHREAD_CREATE_DETACHED,
 };
 
-typedef struct
-{
-  struct
-  {
+typedef struct {
+  struct {
     struct tth_thread *thread;
-  }
-  __priv;
-}
-pthread_t;
+  } __priv;
+} pthread_t;
 
-struct sched_param
-{
+struct sched_param {
   int sched_priority;
 };
 
 #ifdef PTHREAD_STACK_MIN_OVERRIDE
-# define PTHREAD_STACK_MIN    (PTHREAD_STACK_MIN_OVERRIDE)
+#define PTHREAD_STACK_MIN (PTHREAD_STACK_MIN_OVERRIDE)
 #else
-# define PTHREAD_STACK_MIN    4096
+#define PTHREAD_STACK_MIN 4096
 #endif
 
-#define PTHREAD_STACK_ALIGN   (sizeof(void *))
+#define PTHREAD_STACK_ALIGN (sizeof(void *))
 
-typedef struct
-{
-  struct
-  {
+typedef struct {
+  struct {
     int detachstate;
     struct sched_param schedparam;
     int schedpolicy;
     void *stackaddr;
     size_t stacksize;
-  }
-  __priv;
-}
-pthread_attr_t;
+  } __priv;
+} pthread_attr_t;
 
-typedef struct
-{
-  struct
-  {
+typedef struct {
+  struct {
     struct tth_thread *waiter;
     struct tth_thread *owner;
-  }
-  __priv;
-}
-pthread_mutex_t;
+  } __priv;
+} pthread_mutex_t;
 
 #define PTHREAD_MUTEX_INITIALIZER \
-  { { NULL, NULL } }
-
-typedef struct
-{
-  /* no member */
-}
-pthread_mutexattr_t;
-
-typedef struct
-{
-  struct
-  {
-    struct tth_thread *waiter;
+  {                               \
+    { NULL, NULL }                \
   }
-  __priv;
-}
-pthread_cond_t;
+
+typedef struct {
+  /* no member */
+} pthread_mutexattr_t;
+
+typedef struct {
+  struct {
+    struct tth_thread *waiter;
+  } __priv;
+} pthread_cond_t;
 
 #define PTHREAD_COND_INITIALIZER \
-  { { NULL } }
+  {                              \
+    { NULL }                     \
+  }
 
-typedef struct
-{
+typedef struct {
   /* no member */
-}
-pthread_condattr_t;
+} pthread_condattr_t;
 
-typedef struct
-{
-  struct
-  {
+typedef struct {
+  struct {
     volatile int done;
     pthread_mutex_t mutex;
+  } __priv;
+} pthread_once_t;
+
+#define PTHREAD_ONCE_INIT            \
+  {                                  \
+    { 0, PTHREAD_MUTEX_INITIALIZER } \
   }
-  __priv;
-}
-pthread_once_t;
 
-#define PTHREAD_ONCE_INIT \
-  { { 0, PTHREAD_MUTEX_INITIALIZER } }
+typedef struct {
+} pthread_rwlock_t;
 
-typedef struct
-{
-}
-pthread_rwlock_t;
+typedef struct {
+} pthread_rwlockattr_t;
 
-typedef struct
-{
-}
-pthread_rwlockattr_t;
-
-typedef struct
-{
-}
-pthread_spinlock_t;
+typedef struct {
+} pthread_spinlock_t;
 
 /* Thread control */
-extern int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *), void *arg);
+extern int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
+                          void *(*start_routine)(void *), void *arg);
 extern void pthread_exit(void *retval);
 extern int pthread_join(pthread_t thread, void **retval);
 extern int pthread_detach(pthread_t thread);
@@ -136,18 +111,23 @@ extern int pthread_attr_init(pthread_attr_t *attr);
 extern int pthread_attr_destroy(pthread_attr_t *attr);
 extern int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate);
 extern int pthread_attr_getdetachstate(pthread_attr_t *attr, int *detachstate);
-extern int pthread_attr_setschedparam(pthread_attr_t *attr, const struct sched_param *param);
-extern int pthread_attr_getschedparam(pthread_attr_t *attr, struct sched_param *param);
+extern int pthread_attr_setschedparam(pthread_attr_t *attr,
+                                      const struct sched_param *param);
+extern int pthread_attr_getschedparam(pthread_attr_t *attr,
+                                      struct sched_param *param);
 extern int pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy);
 extern int pthread_attr_getschedpolicy(pthread_attr_t *attr, int *policy);
-extern int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksize);
-extern int pthread_attr_getstack(pthread_attr_t *attr, void **stackaddr, size_t *stacksize);
+extern int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr,
+                                 size_t stacksize);
+extern int pthread_attr_getstack(pthread_attr_t *attr, void **stackaddr,
+                                 size_t *stacksize);
 extern int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
 extern int pthread_attr_getstacksize(pthread_attr_t *attr, size_t *stacksize);
 
 /* Mutex */
 extern int pthread_mutex_destroy(pthread_mutex_t *mutex);
-extern int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr);
+extern int pthread_mutex_init(pthread_mutex_t *mutex,
+                              const pthread_mutexattr_t *attr);
 extern int pthread_mutex_lock(pthread_mutex_t *mutex);
 extern int pthread_mutex_trylock(pthread_mutex_t *mutex);
 extern int pthread_mutex_unlock(pthread_mutex_t *mutex);
@@ -158,7 +138,8 @@ extern int pthread_mutex_unlock(pthread_mutex_t *mutex);
 
 /* Conditional variable */
 extern int pthread_cond_destroy(pthread_cond_t *cond);
-extern int pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr);
+extern int pthread_cond_init(pthread_cond_t *cond,
+                             const pthread_condattr_t *attr);
 extern int pthread_cond_broadcast(pthread_cond_t *cond);
 extern int pthread_cond_signal(pthread_cond_t *cond);
 extern int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex);
@@ -168,11 +149,13 @@ extern int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex);
 // extern int pthread_condattr_init(pthread_condattr_t *attr);
 
 /* Once control */
-extern int pthread_once(pthread_once_t *once_control, void (*init_routine)(void));
+extern int pthread_once(pthread_once_t *once_control,
+                        void (*init_routine)(void));
 
 /* Readers-writer lock */
 extern int pthread_rwlock_destroy(pthread_rwlock_t *rwlock);
-extern int pthread_rwlock_init(pthread_rwlock_t *rwlock, const pthread_rwlockattr_t *attr);
+extern int pthread_rwlock_init(pthread_rwlock_t *rwlock,
+                               const pthread_rwlockattr_t *attr);
 extern int pthread_rwlock_rdlock(pthread_rwlock_t *rwlock);
 extern int pthread_rwlock_tryrdlock(pthread_rwlock_t *rwlock);
 extern int pthread_rwlock_trywrlock(pthread_rwlock_t *rwlock);
@@ -197,4 +180,4 @@ extern int pthread_getname_np(pthread_t thread, char *name, size_t len);
 } /* extern "C" */
 #endif
 
-#endif  /* __PTHREAD_H__ */
+#endif /* __PTHREAD_H__ */

@@ -5,27 +5,26 @@
 extern "C" {
 #endif
 
-enum
-{
+enum {
   SCHED_FIFO = 1,
   SCHED_RR,
 };
 
 #if (SCHED_POLICY_DEFAULT_FF != 0)
-#define SCHED_POLICY_DEFAULT    SCHED_FF
+#define SCHED_POLICY_DEFAULT SCHED_FF
 #else
-#define SCHED_POLICY_DEFAULT    SCHED_RR
+#define SCHED_POLICY_DEFAULT SCHED_RR
 #endif
 
 #ifndef SCHED_PRIORITY_MIN
-#define SCHED_PRIORITY_MIN      1
+#define SCHED_PRIORITY_MIN 1
 #endif
 #if !(SCHED_PRIORITY_MIN >= 1)
 #error "SCHED_PRIORITY_MIN must be >= 1"
 #endif
 
 #ifndef SCHED_PRIORITY_MAX
-#define SCHED_PRIORITY_MAX      99
+#define SCHED_PRIORITY_MAX 99
 #endif
 #if !(SCHED_PRIORITY_MAX <= 255)
 #error "SCHED_PRIORITY_MIN must be <= 255"
@@ -36,7 +35,7 @@ enum
 #endif
 
 #ifndef SCHED_PRIORITY_DEFAULT
-#define SCHED_PRIORITY_DEFAULT  10
+#define SCHED_PRIORITY_DEFAULT 10
 #endif
 #if !(SCHED_PRIORITY_MIN <= SCHED_PRIORITY_DEFAULT) || \
     !(SCHED_PRIORITY_DEFAULT <= SCHED_PRIORITY_MAX)
@@ -54,4 +53,4 @@ extern int sched_roundrobin_np(void);
 } /* extern "C" */
 #endif
 
-#endif  /* __SCHED_H__ */
+#endif /* __SCHED_H__ */

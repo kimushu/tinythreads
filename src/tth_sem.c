@@ -1,16 +1,14 @@
+#include <errno.h>
 #include <priv/tth_core.h>
 #include <stddef.h>
-#include <errno.h>
 #if (TTHREAD_ENABLE_SEM != 0)
 
 /*
  * [POSIX.1-2001]
  * Destroy an unnamed semaphore
  */
-int sem_destroy(sem_t *sem)
-{
-  if (sem->__priv.waiter)
-  {
+int sem_destroy(sem_t *sem) {
+  if (sem->__priv.waiter) {
     tth_arch_crash();
   }
 
@@ -21,16 +19,13 @@ int sem_destroy(sem_t *sem)
  * [POSIX.1-2001]
  * Initialize an unnamed semaphore
  */
-int sem_init(sem_t *sem, int pshared, unsigned int value)
-{
-  if (value > SEM_VALUE_MAX)
-  {
+int sem_init(sem_t *sem, int pshared, unsigned int value) {
+  if (value > SEM_VALUE_MAX) {
     errno = EINVAL;
     return -1;
   }
 
-  if (pshared)
-  {
+  if (pshared) {
     errno = ENOSYS;
     return -1;
   }
@@ -44,8 +39,7 @@ int sem_init(sem_t *sem, int pshared, unsigned int value)
  * [POSIX.1-2001]
  * Get the value of a semaphore
  */
-int sem_getvalue(sem_t *sem, int *sval)
-{
+int sem_getvalue(sem_t *sem, int *sval) {
   *sval = sem->__priv.value;
   return 0;
 }
@@ -55,24 +49,18 @@ int sem_getvalue(sem_t *sem, int *sval)
  * Unlock a semaphore
  * (Async-signal-safe function)
  */
-int sem_post(sem_t *sem)
-{
+int sem_post(sem_t *sem) {
   int lock = tth_arch_cs_begin();
   int result = 0;
 
-  if (sem->__priv.waiter)
-  {
+  if (sem->__priv.waiter) {
     tth_cs_move(&sem->__priv.waiter, &tth_ready, TTHREAD_WAIT_READY);
     tth_arch_cs_end_switch(lock);
     return 0;
-  }
-  else if (sem->__priv.value == SEM_VALUE_MAX)
-  {
+  } else if (sem->__priv.value == SEM_VALUE_MAX) {
     errno = EOVERFLOW;
     result = -1;
-  }
-  else
-  {
+  } else {
     ++sem->__priv.value;
   }
 
@@ -84,16 +72,12 @@ int sem_post(sem_t *sem)
  * [POSIX.1-2001]
  * Lock a semaphore
  */
-int sem_wait(sem_t *sem)
-{
+int sem_wait(sem_t *sem) {
   int lock = tth_arch_cs_begin();
 
-  if (sem->__priv.value > 0)
-  {
+  if (sem->__priv.value > 0) {
     --sem->__priv.value;
-  }
-  else
-  {
+  } else {
     tth_cs_move(&tth_ready, &sem->__priv.waiter, TTHREAD_WAIT_SEM);
     tth_arch_cs_end_switch(lock);
     return 0;
@@ -107,18 +91,14 @@ int sem_wait(sem_t *sem)
  * [POSIX.1-2001]
  * Try to lock a semaphore
  */
-int sem_trywait(sem_t *sem)
-{
+int sem_trywait(sem_t *sem) {
   int lock = tth_arch_cs_begin();
   int result;
 
-  if (sem->__priv.value > 0)
-  {
+  if (sem->__priv.value > 0) {
     --sem->__priv.value;
     result = 0;
-  }
-  else
-  {
+  } else {
     errno = EAGAIN;
     result = -1;
   }
@@ -127,4 +107,4 @@ int sem_trywait(sem_t *sem)
   return result;
 }
 
-#endif  /* TTHREAD_ENABLE_SEM */
+#endif /* TTHREAD_ENABLE_SEM */

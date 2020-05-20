@@ -8,24 +8,24 @@
 #include <altera_avalon_timer_regs.h>
 #include <system.h>
 
-#define HOSTED_EXIT         0
-#define HOSTED_WRITE        5
+#define HOSTED_EXIT 0
+#define HOSTED_WRITE 5
 #define HOSTED_GETTIMEOFDAY 11
 
-static void sys_clk_timer_period_init(void)
-{
+static void sys_clk_timer_period_init(void) {
   // Period must be initialized by LOAD_VALUE for QEMU board configuration
-  IOWR_ALTERA_AVALON_TIMER_PERIODH(SYS_CLK_TIMER_BASE, SYS_CLK_TIMER_LOAD_VALUE >> 16);
-  IOWR_ALTERA_AVALON_TIMER_PERIODL(SYS_CLK_TIMER_BASE, SYS_CLK_TIMER_LOAD_VALUE & 0xffff);
+  IOWR_ALTERA_AVALON_TIMER_PERIODH(SYS_CLK_TIMER_BASE,
+                                   SYS_CLK_TIMER_LOAD_VALUE >> 16);
+  IOWR_ALTERA_AVALON_TIMER_PERIODL(SYS_CLK_TIMER_BASE,
+                                   SYS_CLK_TIMER_LOAD_VALUE & 0xffff);
   IOWR_ALTERA_AVALON_TIMER_CONTROL(SYS_CLK_TIMER_BASE,
-      ALTERA_AVALON_TIMER_CONTROL_ITO_MSK |
-      ALTERA_AVALON_TIMER_CONTROL_CONT_MSK |
-      ALTERA_AVALON_TIMER_CONTROL_START_MSK);
+                                   ALTERA_AVALON_TIMER_CONTROL_ITO_MSK |
+                                       ALTERA_AVALON_TIMER_CONTROL_CONT_MSK |
+                                       ALTERA_AVALON_TIMER_CONTROL_START_MSK);
 }
 
-__attribute__((section(".ctors")))
-static void *const init_list[] = {
-  sys_clk_timer_period_init,
+__attribute__((section(".ctors"))) static void *const init_list[] = {
+    sys_clk_timer_period_init,
 };
 
 extern void hosted(int id, void *args);
@@ -35,9 +35,7 @@ struct semi_result {
   int errno_value;
 };
 
-__attribute__((noreturn))
-void _exit(int code)
-{
+__attribute__((noreturn)) void _exit(int code) {
   union {
     struct {
       int code;
@@ -46,11 +44,10 @@ void _exit(int code)
   } buf;
   buf.args.code = code;
   hosted(HOSTED_EXIT, &buf);
-  for (;;);
+  for (;;) {}
 }
 
-int puts(const char *str)
-{
+int puts(const char *str) {
   union {
     struct {
       int fd;
@@ -61,7 +58,7 @@ int puts(const char *str)
   } buf;
   buf.args.fd = STDOUT_FILENO;
   buf.args.str = str;
-  for (buf.args.len = 0; *str != '\0'; ++str, ++buf.args.len);
+  for (buf.args.len = 0; *str != '\0'; ++str, ++buf.args.len) {}
   hosted(HOSTED_WRITE, &buf);
   if (buf.result.return_value == 0) {
     buf.args.fd = STDOUT_FILENO;
@@ -74,8 +71,7 @@ int puts(const char *str)
 }
 
 #undef putc
-int putc(int c, FILE *fp)
-{
+int putc(int c, FILE *fp) {
   const unsigned char ch = (unsigned char)c;
   union {
     struct {
@@ -92,8 +88,7 @@ int putc(int c, FILE *fp)
   return ch;
 }
 
-int gettimeofday(struct timeval *tv, void *tz)
-{
+int gettimeofday(struct timeval *tv, void *tz) {
   union {
     struct {
       void *tv_gdb;
@@ -114,8 +109,6 @@ int gettimeofday(struct timeval *tv, void *tz)
   return buf.result.return_value;
 }
 
-__asm(
-  "hosted:\n"
-  "break 1\n"
-  "ret\n"
-);
+__asm("hosted:\n"
+      "break 1\n"
+      "ret\n");
