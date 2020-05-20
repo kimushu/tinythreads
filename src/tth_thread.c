@@ -140,8 +140,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
 
   lock = tth_arch_cs_begin();
   tth_cs_move(&object, &tth_ready, TTHREAD_WAIT_READY);
-  tth_cs_switch();
-  tth_arch_cs_end(lock);
+  tth_arch_cs_end_switch(lock);
 
   return 0;
 }
@@ -154,7 +153,7 @@ void pthread_exit(void *retval)
 {
   tth_thread *target = tth_running;
 
-  tth_arch_cs_begin();
+  int lock = tth_arch_cs_begin();
 
   target->shared.retval = retval;
   tth_arch_cs_cleanup(target);
@@ -169,7 +168,7 @@ void pthread_exit(void *retval)
     tth_cs_move(&tth_ready, &tth_detach, TTHREAD_WAIT_DEAD);
   }
 
-  tth_cs_switch();
+  tth_arch_cs_end_switch(lock);
   // never return
 }
 
@@ -198,7 +197,11 @@ int pthread_join(pthread_t thread, void **retval)
     if (target->waitstate != TTHREAD_WAIT_JOIN)
     {
       tth_cs_move(&tth_ready, &target->waiter, TTHREAD_WAIT_THREAD);
-      tth_cs_switch();
+      tth_arch_cs_end_switch(lock);
+    }
+    else
+    {
+      tth_arch_cs_end(lock);
     }
 
     /* Target thread has been finished */
@@ -207,7 +210,6 @@ int pthread_join(pthread_t thread, void **retval)
       *retval = target->shared.retval;
     }
 
-    tth_arch_cs_end(lock);
 #ifdef TTHREAD_MALLOC_LOCK
     __malloc_lock(_impure_ptr);
 #endif

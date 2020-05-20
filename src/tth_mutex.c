@@ -37,7 +37,23 @@ int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr)
 int pthread_mutex_lock(pthread_mutex_t *mutex)
 {
   int lock = tth_arch_cs_begin();
-  int result = tth_cs_mutex_lock(mutex, 1);
+  int result;
+
+  if (mutex->__priv.owner == tth_running)
+  {
+    result = EDEADLK;
+  }
+  else if (mutex->__priv.owner)
+  {
+    tth_cs_move(&tth_ready, &mutex->__priv.waiter, TTHREAD_WAIT_MUTEX);
+    tth_arch_cs_end_switch(lock);
+    return 0;
+  }
+  else
+  {
+    mutex->__priv.owner = tth_running;
+    result = 0;
+  }
   tth_arch_cs_end(lock);
   return result;
 }
@@ -49,7 +65,21 @@ int pthread_mutex_lock(pthread_mutex_t *mutex)
 int pthread_mutex_trylock(pthread_mutex_t *mutex)
 {
   int lock = tth_arch_cs_begin();
-  int result = tth_cs_mutex_lock(mutex, 0);
+  int result;
+
+  if (mutex->__priv.owner == tth_running)
+  {
+    result = EDEADLK;
+  }
+  else if (mutex->__priv.owner)
+  {
+    result = EBUSY;
+  }
+  else
+  {
+    mutex->__priv.owner = tth_running;
+    result = 0;
+  }
   tth_arch_cs_end(lock);
   return result;
 }
@@ -64,9 +94,12 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex)
   int result = tth_cs_mutex_unlock(mutex);
   if (result == 0)
   {
-    tth_cs_switch();
+    tth_arch_cs_end_switch(lock);
   }
-  tth_arch_cs_end(lock);
+  else
+  {
+    tth_arch_cs_end(lock);
+  }
   return result;
 }
 

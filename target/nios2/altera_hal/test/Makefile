@@ -74,6 +74,13 @@ software/bsp_%/Makefile: %.sopcinfo $(DIST_TCL)
 $(DIST_TCL):
 	$(Q)$(MAKE) -C .. --no-print-directory dist
 
+.PHONY: update
+update:
+	@echo "## Updating distribution package ..."
+	@rm -f $(DIST_TCL)
+	@$(MAKE) --no-print-directory \
+		$(foreach t,$(TARGETS),software/app_$(t)/test.elf)
+
 .PHONY: clean
 clean:
 	@echo "## Cleaning ..."

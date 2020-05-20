@@ -67,8 +67,7 @@ int usleep(useconds_t us)
   }
   tth_running->follower = next;
   *to = tth_running;
-  tth_cs_switch();
-  tth_arch_cs_end(lock);
+  tth_arch_cs_end_switch(lock);
   return 0;
 }
 

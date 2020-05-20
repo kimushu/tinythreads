@@ -1,6 +1,9 @@
 #ifndef __PRIV_TTH_CORE_H__
 #define __PRIV_TTH_CORE_H__
 
+/* Prototype for inline functions used in architecture dependent part */
+static inline int tth_is_switch_pending(void) __attribute__((always_inline));
+
 #if defined(__NIOS2__)
 # include <priv/tth_arch_nios2.h>
 #elif defined(__PIC32M__)
@@ -65,12 +68,12 @@ extern void tth_arch_initialize(void);
 extern int  tth_arch_init_context(tth_thread *thread, void *stack_bottom, void *(*start_routine)(void *), void *arg);
 extern int  tth_arch_cs_begin(void);
 extern void tth_arch_cs_end(int lock);
-extern void tth_arch_cs_exec_switch(void);
+extern void tth_arch_cs_end_switch(int lock);
 extern void tth_arch_cs_cleanup(tth_thread *thread);
 
 /* Prototype for inline functions */
 static inline void tth_cs_move(tth_thread **from, tth_thread **to, int waitstate) __attribute__((always_inline));
-static inline void tth_cs_switch(void) __attribute__((always_inline));
+static inline int  tth_is_interrupted(void) __attribute__((always_inline));
 
 /* Move thread to another linked list */
 static inline void tth_cs_move(tth_thread **from, tth_thread **to, int waitstate)
@@ -101,13 +104,16 @@ static inline void tth_cs_move(tth_thread **from, tth_thread **to, int waitstate
   }
 }
 
-/* Execute context switch */
-static inline void tth_cs_switch(void)
+/* Determine if context is in interrupt handler or not */
+static inline int tth_is_interrupted(void)
 {
-  if ((tth_int_level == 0) && (tth_running != tth_ready))
-  {
-    tth_arch_cs_exec_switch();
-  }
+  return (tth_int_level != 0);
+}
+
+/* Determine context switch is pending or not */
+static inline int tth_is_switch_pending(void)
+{
+  return (tth_running != tth_ready);
 }
 
 #ifdef __cplusplus

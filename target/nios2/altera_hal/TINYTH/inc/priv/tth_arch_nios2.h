@@ -43,7 +43,7 @@ tth_arch_context;
 static inline void tth_arch_crash(void) __attribute__((always_inline));
 static inline int  tth_arch_cs_begin(void) __attribute__((always_inline));
 static inline void tth_arch_cs_end(int status) __attribute__((always_inline));
-static inline void tth_arch_cs_exec_switch(void) __attribute__((always_inline));
+static inline void tth_arch_cs_end_switch(int status) __attribute__((always_inline));
 
 /* Crash system */
 static inline void tth_arch_crash(void)
@@ -77,14 +77,19 @@ static inline void tth_arch_cs_end(int status)
 }
 
 /*
- * Execute thread switching
+ * End critical section and switch
  */
-static inline void tth_arch_cs_exec_switch(void)
+static inline void tth_arch_cs_end_switch(int status)
 {
-  /*
-   * Issue "trap <imm5>" instruction
-   */
-  __asm__ volatile("trap 24");
+  tth_arch_cs_end(status);
+
+  if (tth_is_switch_pending())
+  {
+    /*
+    * Issue "trap <imm5>" instruction
+    */
+    __asm__ volatile("trap 24");
+  }
 }
 
 #ifdef __cplusplus
