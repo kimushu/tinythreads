@@ -8,6 +8,7 @@ extern void test_once(void);
 extern void test_sem(void);
 extern void test_sleep(void);
 extern void test_newlib(void);
+extern void test_arch(void);
 
 void setUp(void) {}
 
@@ -23,5 +24,6 @@ int main(void) {
   test_sem();
   test_sleep();
   test_newlib();
+  test_arch();
   return UNITY_END();
 }

@@ -11,6 +11,7 @@ TEST_ROOT = ../../../../test
 
 QEMU_BIN = $(TEST_ROOT)/qemu/build/nios2-softmmu/qemu-system-nios2
 QEMU_OPT = -M 10m50-ghrd -nographic -serial null \
+	-cpu host,mmu_present=off \
 	-monitor $(QEMU_MON) \
 	-semihosting -device loader,addr=0xc8000000,cpu-num=0
 QEMU_MON ?= null
@@ -18,7 +19,7 @@ QEMU_MON ?= null
 TEST_SOURCES := \
 	$(foreach d,$(TEST_ROOT) $(TEST_ROOT)/Unity/src,\
 		$(wildcard $(d)/*.c $(d)/*.h)) \
-	qemu_semi.c
+	test_arch_nios2.c qemu_semi.c
 
 TARGETS = qemu_10m50_ghrd
 TARGET ?= $(firstword $(TARGETS))
@@ -47,7 +48,7 @@ debug: $(TARGET).debug
 gdb: $(TARGET).gdb
 %.gdb: software/app_%/test.elf
 	@echo "## Starting GDB ..."
-	$(Q)nios2-elf-gdb --nx -iex "target remote :1234" $<
+	$(Q)nios2-elf-gdb --nh -iex "target remote :1234" $<
 
 .PRECIOUS: software/app_%/test.elf
 software/app_%/test.elf: software/app_%/Makefile
