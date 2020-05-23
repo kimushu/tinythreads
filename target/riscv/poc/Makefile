@@ -42,7 +42,8 @@ qemu:
 
 .PHONY: gdb
 gdb: $(firstword $(TARGET) $(TARGETS)).elf
-	$(Q)$(CROSS_COMPILE)gdb $(GDB_OPT) -iex "target remote :1234" $<
+	$(Q)$(CROSS_COMPILE)gdb $(GDB_OPT) \
+		-iex "set arch riscv:rv32" -iex "target remote :1234" $<
 
 .PRECIOUS: $(addsuffix .elf,$(TARGETS))
 .PRECIOUS: $(addsuffix .lst,$(TARGETS))
