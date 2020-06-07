@@ -11,7 +11,7 @@ extern void sub_thread_work(void);
 extern void stop(void);
 
 typedef struct TCB {
-  // TODO
+  void *sp;
   struct TCB *follower;
   volatile int exited;
 } TCB;
@@ -20,6 +20,41 @@ TCB main_thread;
 TCB sub_thread;
 TCB *thread_run;
 TCB *thread_ready;
+
+/*
+  |  gp  | <- saved at thread switch (56-byte)
+  |  tp  |
+  |  s0  |
+  |  s1  |
+  |  s2  |
+  |  s3  |
+  |  s4  |
+  |  s5  |
+  |  s6  |
+  |  s7  |
+  |  s8  |
+  |  s9  |
+  |  s10 |
+  |  s11 |
+  |  ra  | <- saved at interrupt entry (68-byte)
+  |  t0  |
+  |  t1  |
+  |  t2  |
+  |  a0  |
+  |  a1  |
+  |  a2  |
+  |  a3  |
+  |  a4  |
+  |  a5  |
+  |  a6  |
+  |  a7  |
+  |  t3  |
+  |  t4  |
+  |  t5  |
+  |  t6  |
+  | mpec |
+  | .... | <- used in each thread
+*/
 
 // (1) CPU starts from reset vector
 __asm(
@@ -128,10 +163,116 @@ __asm(
 );
 
 // (x) Process machine timer interrupts
-void machine_timer_interrupt(void) __attribute__((interrupt("machine")));
+void machine_timer_interrupt(void) __attribute__((naked));
 void machine_timer_interrupt(void)
 {
-  SEMI_PRINT("== machine_timer_interrupt\n");
+  // Save caller-saved registers (ra,t0-r2,a0-a7,t3-t6)
+  __asm(
+    "addi   sp, sp, -64\n"
+    "sw     ra, 0(sp)\n"
+    "sw     t0, 4(sp)\n"
+    "sw     t1, 8(sp)\n"
+    "sw     t2, 12(sp)\n"
+    "sw     a0, 16(sp)\n"
+    "sw     a1, 20(sp)\n"
+    "sw     a2, 24(sp)\n"
+    "sw     a3, 28(sp)\n"
+    "sw     a4, 32(sp)\n"
+    "sw     a5, 36(sp)\n"
+    "sw     a6, 40(sp)\n"
+    "sw     a7, 44(sp)\n"
+    "sw     t3, 48(sp)\n"
+    "sw     t4, 52(sp)\n"
+    "sw     t5, 56(sp)\n"
+    "sw     t6, 60(sp)\n"
+    "csrrc  t0, mepc, x0\n" // Save mepc
+    "sw     t0, 64(sp)\n"
+  );
+
+  // Call system tick handler
+  __asm(
+    "jal    systick_handler"
+  );
+
+  // Context switch if needed
+  __asm(
+    "la     t0, thread_run\n"
+    "la     t1, thread_ready\n"
+    "lw     t2, 0(t0)\n"  // thread_run
+    "lw     t3, 0(t1)\n"  // thread_ready
+    "beq    t2, t3, no_switch\n"
+    // Switch needed
+    // Save callee-saved registers
+    "addi   sp, sp, -56\n"
+    "sw     gp, 0(sp)\n"
+    "sw     tp, 4(sp)\n"
+    "sw     s0, 8(sp)\n"
+    "sw     s1, 12(sp)\n"
+    "sw     s2, 16(sp)\n"
+    "sw     s3, 20(sp)\n"
+    "sw     s4, 24(sp)\n"
+    "sw     s5, 28(sp)\n"
+    "sw     s6, 32(sp)\n"
+    "sw     s7, 36(sp)\n"
+    "sw     s8, 40(sp)\n"
+    "sw     s9, 44(sp)\n"
+    "sw     s10, 48(sp)\n"
+    "sw     s11, 52(sp)\n"
+    // Store old stack pointer
+    "sw     sp, 0(t2)\n"
+    // Switch thread_run
+    "sw     t3, 0(t0)\n"
+    // Load new stack pointer
+    "lw     sp, 0(t3)\n"
+    // Restore callee-saved registers
+    "lw     gp, 0(sp)\n"
+    "lw     tp, 4(sp)\n"
+    "lw     s0, 8(sp)\n"
+    "lw     s1, 12(sp)\n"
+    "lw     s2, 16(sp)\n"
+    "lw     s3, 20(sp)\n"
+    "lw     s4, 24(sp)\n"
+    "lw     s5, 28(sp)\n"
+    "lw     s6, 32(sp)\n"
+    "lw     s7, 36(sp)\n"
+    "lw     s8, 40(sp)\n"
+    "lw     s9, 44(sp)\n"
+    "lw     s10, 48(sp)\n"
+    "lw     s11, 52(sp)\n"
+    "addi   sp, sp, 56\n"
+  "no_switch:"
+  );
+
+  // Restore caller-saved registers
+  __asm(
+    "lw     t0, 64(sp)\n"
+    "csrrw  x0, mepc, t0\n" // Restore mepc
+    "lw     ra, 0(sp)\n"
+    "lw     t0, 4(sp)\n"
+    "lw     t1, 8(sp)\n"
+    "lw     t2, 12(sp)\n"
+    "lw     a0, 16(sp)\n"
+    "lw     a1, 20(sp)\n"
+    "lw     a2, 24(sp)\n"
+    "lw     a3, 28(sp)\n"
+    "lw     a4, 32(sp)\n"
+    "lw     a5, 36(sp)\n"
+    "lw     a6, 40(sp)\n"
+    "lw     a7, 44(sp)\n"
+    "lw     t3, 48(sp)\n"
+    "lw     t4, 52(sp)\n"
+    "lw     t5, 56(sp)\n"
+    "lw     t6, 60(sp)\n"
+    "addi   sp, sp, 64\n"
+  );
+
+  // Return from interrupt
+  __asm("mret");
+}
+
+static void systick_handler(void)
+{
+  SEMI_PRINT("== systick_handler\n");
 
   // Update machine timer threshold
   volatile uint64_t *mtimecmp = (volatile uint64_t *)0x02004000;
