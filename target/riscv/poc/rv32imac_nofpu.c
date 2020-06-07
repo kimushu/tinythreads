@@ -96,7 +96,6 @@ void os_init(void)
   volatile uint64_t *mtime    = (volatile uint64_t *)0x0200bff8;
   *mtime = 0;
   *mtimecmp = MACHINE_TIMER_INTERVAL;
-  __asm volatile("csrc mip, %0":: "r"(1u<<7));  // mip.MTIP <= 0
   __asm volatile("csrs mie, %0":: "r"(1u<<7));  // mie.MTIE <= 1
   uint32_t mtvec_old;
   __asm volatile("csrrw %0, mtvec, %1":
@@ -275,9 +274,12 @@ static void systick_handler(void)
   SEMI_PRINT("== systick_handler\n");
 
   // Update machine timer threshold
-  volatile uint64_t *mtimecmp = (volatile uint64_t *)0x02004000;
-  *mtimecmp += MACHINE_TIMER_INTERVAL;
-  __asm volatile("csrc mip, %0":: "r"(1u<<7));  // mip.MTIP <= 0
+  volatile uint32_t *mtimecmp = (volatile uint32_t *)0x02004000;
+  uint64_t mtimecmp_value = *(volatile uint64_t *)0x02004000;
+  mtimecmp_value += MACHINE_TIMER_INTERVAL;
+  mtimecmp[0] = 0xffffffff;
+  mtimecmp[1] = (mtimecmp_value >> 32);
+  mtimecmp[0] = (mtimecmp_value & 0xffffffff);
 
   // for (;;);
 }
