@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stddef.h>
 #include "utils.h"
 
 #define MACHINE_TIMER_INTERVAL  5000000
@@ -8,7 +9,9 @@ extern int main(void);
 extern void create_sub_thread(void (*entry)(void));
 extern void trap_vector(void);
 extern void sub_thread_work(void);
+extern void yield(void);
 extern void stop(void);
+extern void exit_thread(void);
 
 typedef struct TCB {
   void *sp;
@@ -20,6 +23,7 @@ TCB main_thread;
 TCB sub_thread;
 TCB *thread_run;
 TCB *thread_ready;
+uint32_t stack_subthread[1024];
 
 /*
   |  gp  | <- saved at thread switch (56-byte)
@@ -126,7 +130,47 @@ int main(void)
 // (5) Create sub_thread
 void create_sub_thread(void (*entry)(void))
 {
+  union {
+    void **p;
+    uint32_t *u;
+  } sp;
+  sp.p = (void **)&stack_subthread[sizeof(stack_subthread) / sizeof(*stack_subthread)];
+  *(--sp.p) = entry;        // mpec
+  *(--sp.u) = 0xe6e6e6e6;   // t6
+  *(--sp.u) = 0xe5e5e5e5;   // t5
+  *(--sp.u) = 0xe4e4e4e4;   // t4
+  *(--sp.u) = 0xe3e3e3e3;   // t3
+  *(--sp.u) = 0xa7a7a7a7;   // a7
+  *(--sp.u) = 0xa6a6a6a6;   // a6
+  *(--sp.u) = 0xa5a5a5a5;   // a5
+  *(--sp.u) = 0xa4a4a4a4;   // a4
+  *(--sp.u) = 0xa3a3a3a3;   // a3
+  *(--sp.u) = 0xa2a2a2a2;   // a2
+  *(--sp.u) = 0xa1a1a1a1;   // a1
+  *(--sp.u) = 0xa0a0a0a0;   // a0
+  *(--sp.u) = 0xe2e2e2e2;   // t2
+  *(--sp.u) = 0xe1e1e1e1;   // t1
+  *(--sp.u) = 0xe0e0e0e0;   // t0
+  *(--sp.p) = exit_thread;  // ra
 
+  *(--sp.u) = 0x11111111;   // s11
+  *(--sp.u) = 0x10101010;   // s10
+  *(--sp.u) = 0x09090909;   // s9
+  *(--sp.u) = 0x08080808;   // s8
+  *(--sp.u) = 0x07070707;   // s7
+  *(--sp.u) = 0x06060606;   // s6
+  *(--sp.u) = 0x05050505;   // s5
+  *(--sp.u) = 0x04040404;   // s4
+  *(--sp.u) = 0x03030303;   // s3
+  *(--sp.u) = 0x02020202;   // s2
+  *(--sp.u) = 0x01010101;   // s1
+  *(--sp.u) = 0x00000000;   // s0
+  *(--sp.u) = 0xdeadbeef;   // tp
+  uint32_t gp;
+  __asm volatile("and %0, gp, gp": "=r"(gp));
+  *(--sp.u) = gp;           // gp
+  sub_thread.sp = sp.p;
+  main_thread.follower = &sub_thread;
 }
 
 // (x-b) Start some job on sub_thread...
@@ -134,7 +178,7 @@ void sub_thread_work(void)
 {
   for (volatile uint32_t i = 0; i < 10; ++i) {
     SEMI_PRINT("-- sub_thread\n");
-    for (volatile uint32_t j = 0; j < 1000000; ++j);
+    for (volatile uint32_t j = 0; j < 100000000; ++j);
   }
   // (x-b) End job on sub_thread
 }
@@ -280,8 +324,49 @@ static void systick_handler(void)
   mtimecmp[0] = 0xffffffff;
   mtimecmp[1] = (mtimecmp_value >> 32);
   mtimecmp[0] = (mtimecmp_value & 0xffffffff);
+  yield();
+}
 
-  // for (;;);
+// (10) Rotate (round-robin) thread
+void yield(void)
+{
+  int status = disable_interrupts();
+
+  // SEMI_PRINT("== yield\n");
+  TCB *target = thread_ready;       // Thread to be rotated
+  TCB **store = &target->follower;  // Pointer to store follower
+  TCB *next = *store;
+
+  if (next) {
+    // Remove target from chain
+    thread_ready = next;
+    target->follower = NULL;
+
+    // Search tail of chain
+    do {
+      store = &next->follower;
+      next = *store;
+    } while (next);
+
+    // Add target to tail
+    *store = target;
+  }
+
+  enable_interrupts(status);
+}
+
+// (12) Process sub-thread's exit
+void exit_thread(void)
+{
+  SEMI_PRINT("== exit_thread\n");
+  int status = disable_interrupts();
+  TCB *self = thread_run;
+  thread_ready = self->follower;
+  self->follower = NULL;
+  self->exited = 1;
+  enable_interrupts(status);
+  // (13) Raise exception by trap instruction to force switch
+  for (;;);
 }
 
 // (xx) Stop simulation
